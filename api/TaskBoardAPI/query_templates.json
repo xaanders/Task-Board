@@ -1,3 +1,5 @@
 {
-    "select_board":  "SELECT * FROM board"
+    "select_board": "SELECT * FROM board",
+    "insert_board": "INSERT board {{insert_params}}",
+    "update_board": "UPDATE board {{update_params}}"
 }

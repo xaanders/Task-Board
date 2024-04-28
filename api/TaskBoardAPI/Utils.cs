@@ -1,6 +1,7 @@
 ﻿using DataAccess.DBAccess;
 using Newtonsoft.Json;
 
+
 namespace TaskBoardAPI;
 
 public class Utils(Environment environment)
@@ -14,20 +15,38 @@ public class Utils(Environment environment)
     internal async Task ReadParams(HttpRequest request)
     {
         parameters.Clear();
-        request.Query?.ToList()?.ForEach(x =>
-        {
-            Console.WriteLine($"{x.Key}, {x.Value}");
-            parameters[x.Key] = x.Value;
-        });
+        request.Query?.ToList()?.ForEach(x => parameters[x.Key] = x.Value);
 
 
         if (request.Method != "POST")
             return;
 
-        using var reader = new StreamReader(request.Body);
-        var content = await reader.ReadToEndAsync();
-        var json = JsonConvert.DeserializeObject<Dictionary<string, object?>>(content);
-        json?.ToList().ForEach(x => parameters[x.Key] = x.Value);
+        if (request.HasFormContentType)
+        {
+            var form = await request.ReadFormAsync();
+            form.ToList().ForEach(x => parameters[x.Key] = x.Value);
+        }
+        else
+        {
+            using var reader = new StreamReader(request.Body);
+            var content = await reader.ReadToEndAsync();
+            var json = JsonConvert.DeserializeObject<Dictionary<string, object?>>(content);
+            json?.ToList().ForEach(x => parameters[x.Key] = x.Value);
+
+            if (!parameters.ContainsKey("where"))
+                return;
+
+            foreach (var item in parameters.Where(p => p.Key == "where"))
+            {
+                var key = item.Value?.ToString();
+                if(key != null)
+                {
+                    var jsonWhere = JsonConvert.DeserializeObject<Dictionary<string, object?>>(key);
+                    parameters["where"] = jsonWhere;
+                }
+            }
+        }
+
     }
     internal object? GetParamObj(string name, bool required = false)
     {

@@ -7,18 +7,20 @@ public class Backend(Environment environment)
 {
     private readonly Environment _env = environment;
     private readonly Utils _u = new Utils(environment);
-    public async Task<object?> Universal(HttpRequest request, string SWtemplate, string? method = null)
+    public async Task<object?> Universal(HttpRequest request, string? method = null)
     {
 
         try
         {
             await _u.ReadParams(request);
 
-
             if (!_u.parameters.TryGetValue("t", out object? t))
                 throw new Exception("No query found");
 
             string? template = _u.GetParamStr("t");
+
+            if (template == null || !_env.templates.ContainsKey(template.ToString()))
+                throw new Exception("No template found");
 
             if (template != null)
             {
@@ -38,8 +40,6 @@ public class Backend(Environment environment)
             return new Dictionary<string, object>
             {
                 { "Error", ex.Message },
-                { "sqlMessage", ex.Message },
-                { "errno", 1 }
             };
         }
     }

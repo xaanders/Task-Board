@@ -12,8 +12,9 @@
                 await next(context);
             });
 
-            app.MapGet("/api/board", async (HttpRequest request,string t, Backend backend) => await backend.Universal(request, t));
+            app.MapGet("/api/board", async (HttpRequest request, Backend backend) => await backend.Universal(request));
 
+            app.MapPost("/api/board", async (HttpRequest request, Backend backend) => await backend.Universal(request));
         }
     }
 }
