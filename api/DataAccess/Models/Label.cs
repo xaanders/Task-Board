@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Models;
 
-public class Label
+public class Label(int id, string? color, string? text, int cardId)
 {
-    public int Id { get; set; }
-    public required string Color { get; set; }
-    public required string Text { get; set; }
-
+    public int Label_Id { get; set; } = id;
+    public string? Color { get; set; } = color;
+    public string? Text { get; set; } = text;
+    public int Card_id { get; set; } = cardId;
 }

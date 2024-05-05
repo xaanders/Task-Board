@@ -1,5 +1,15 @@
 {
-    "select_board": "SELECT * FROM board",
+    "select_board": "SELECT id as category_id, title FROM board",
     "insert_board": "INSERT board {{insert_params}}",
-    "update_board": "UPDATE board {{update_params}}"
+    "update_board": "UPDATE board {{update_params}}",
+
+    "select_card": "SELECT id as card_id, description, title, board_id as category_id FROM card",
+    "insert_card": "INSERT card {{insert_params}}",
+
+    "select_task": "SELECT id as task_id, title, status, text, card_id, completed FROM task",
+    "insert_task": "INSERT task {{insert_params}}",
+
+    "select_label": "SELECT id as label_id, color, text, card_id FROM label",
+    "insert_label": "INSERT label {{insert_params}}",
+
 }

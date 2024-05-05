@@ -4,7 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddSwaggerGen();
 
 var environment = new TaskBoardAPI.Environment();
 await environment.ReadTemplates();
@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin", builder =>
     {
-        builder.WithOrigins("http://localhost:7164/")
+        builder.WithOrigins("*")
                .AllowAnyHeader()
                .AllowAnyMethod();
     });
@@ -26,13 +26,6 @@ var app = builder.Build();
 
 
 app.UseCors("AllowSpecificOrigin"); ;
-
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI();
-//}
 
 app.UseHttpsRedirection();
 

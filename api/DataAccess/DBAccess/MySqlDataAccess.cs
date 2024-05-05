@@ -44,7 +44,7 @@ public class MySqlDataAccess : IMySqlDataAccess
         }
     }
 
-    public async Task<object?> GetTemplate(string query, Dictionary<string, object?> parameters)
+    public async Task<dynamic> GetTemplate(string query, Dictionary<string, object?> parameters)
     {
 
         List<string?> ignore = ["t", "where"];
