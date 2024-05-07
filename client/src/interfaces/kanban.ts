@@ -1,26 +1,32 @@
 export interface ILabel {
+    label_id: number;
     color: string;
     text: string;
   }
   
   export interface ITask {
-    id: number;
+    task_id?: number;
     completed: boolean;
     text: string;
   }
   
   export interface ICard {
-    id: number;
+    card_id: number;
     title: string;
     labels: ILabel[];
     date: string;
     tasks: ITask[];
-    desc?: string;
+    description?: string;
   }
   
   export interface IBoard {
-    id: number;
+    category_id: number;
     title: string;
     cards: ICard[];
   }
   
+  export interface IDBCall {
+    method: string, 
+    query: string, 
+    parameters: Record<string, unknown>
+  }

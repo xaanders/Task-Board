@@ -31,14 +31,14 @@ function Board(props: BoardProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   console.log(showDropdown)
 
-  function onClose(id: number) {
-    setShowDropdown(false);
+  async function onClose(id: number) {
+    setShowDropdown(prev => !prev);
     removeBoard(id);
   }
 
   return (
     <div className="board">
-      <div className="board-inner" key={board?.id}>
+      <div className="board-inner" key={board?.category_id}>
         <div className="board-header">
           <p className="board-header-title">
             {board?.title}
@@ -52,7 +52,7 @@ function Board(props: BoardProps) {
               <Dropdown
                 class="board-dropdown"
               >
-                <p onClick={() => onClose(board?.id)}>Delete Board</p>
+                <p onClick={() => onClose(board.category_id)}>Delete Board</p>
               </Dropdown>
             )}
           </div>
@@ -60,9 +60,9 @@ function Board(props: BoardProps) {
         <div className="board-cards">
           {board?.cards?.map((item) => (
             <Card
-              key={item.id}
+              key={item.card_id}
               card={item}
-              boardId={board.id}
+              boardId={board.category_id}
               removeCard={removeCard}
               onDragEnter={onDragEnter}
               onDragEnd={onDragEnd}
@@ -74,7 +74,7 @@ function Board(props: BoardProps) {
             placeholder="Enter Card Title"
             displayClass="board-add-card"
             editClass="board-add-card-edit"
-            onSubmit={(value: string) => addCard(board?.id, value)}
+            onSubmit={(value: string) => addCard(board?.category_id, value)}
           />
         </div>
       </div>

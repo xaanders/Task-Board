@@ -18,32 +18,40 @@ public class Utils(Environment environment)
         request.Query?.ToList()?.ForEach(x => parameters[x.Key] = x.Value);
 
 
-        if (request.Method != "POST")
+        if (request.Method == "GET")
             return;
 
         if (request.HasFormContentType)
         {
+            Console.WriteLine("form content type");
+
             var form = await request.ReadFormAsync();
             form.ToList().ForEach(x => parameters[x.Key] = x.Value);
         }
         else
         {
+            Console.WriteLine("reader content type");
+
             using var reader = new StreamReader(request.Body);
             var content = await reader.ReadToEndAsync();
             var json = JsonConvert.DeserializeObject<Dictionary<string, object?>>(content);
             json?.ToList().ForEach(x => parameters[x.Key] = x.Value);
+        }
+        foreach(var kvp in parameters)
+        {
+            Console.WriteLine($"{kvp.Key}");
+        }
 
-            if (!parameters.ContainsKey("where"))
-                return;
+        if (!parameters.ContainsKey("where"))
+            return;
 
-            foreach (var item in parameters.Where(p => p.Key == "where"))
+        foreach (var item in parameters.Where(p => p.Key == "where"))
+        {
+            var key = item.Value?.ToString();
+            if (key != null)
             {
-                var key = item.Value?.ToString();
-                if(key != null)
-                {
-                    var jsonWhere = JsonConvert.DeserializeObject<Dictionary<string, object?>>(key);
-                    parameters["where"] = jsonWhere;
-                }
+                var jsonWhere = JsonConvert.DeserializeObject<Dictionary<string, object?>>(key);
+                parameters["where"] = jsonWhere;
             }
         }
 

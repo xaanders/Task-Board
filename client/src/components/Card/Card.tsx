@@ -6,7 +6,7 @@ import Chip from "../Common/Chip";
 import Dropdown from "../Dropdown/Dropdown";
 
 import "./Card.css";
-import CardInfo from "./CardInfo/CardInfo";
+// import CardInfo from "./CardInfo/CardInfo";
 interface CardProps {
   card: ICard;
   boardId: number;
@@ -18,26 +18,27 @@ interface CardProps {
 function Card(props: CardProps) {
   const { card, boardId, removeCard, onDragEnd, onDragEnter, updateCard } =
     props;
-  const { id, title, desc, date, tasks, labels } = card;
+  const { card_id, title, description, date, tasks, labels } = card;
   const [showDropdown, setShowDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
   return (
     <>
       {showModal && (
-        <CardInfo
-          onClose={() => setShowModal(false)}
-          card={card}
-          boardId={boardId}
-          updateCard={updateCard}
-        />
+        // <CardInfo
+        //   onClose={() => setShowModal(false)}
+        //   card={card}
+        //   boardId={boardId}
+        //   updateCard={updateCard}
+        // />
+        <p> card info</p>
       )}
       <div
         className="card"
-        key={card.id}
+        key={card.card_id}
         draggable
-        onDragEnd={() => onDragEnd(boardId, id)}
-        onDragEnter={() => onDragEnter(boardId, id)}
+        onDragEnd={() => onDragEnd(boardId, card_id)}
+        onDragEnter={() => onDragEnter(boardId, card_id)}
         onClick={() => setShowModal(true)}
       >
         <div className="card-top">
@@ -59,14 +60,14 @@ function Card(props: CardProps) {
                 class="board-dropdown"
                 onClose={() => setShowDropdown(false)}
               >
-                <p onClick={() => removeCard(boardId, id)}>Delete Card</p>
+                <p onClick={() => removeCard(boardId, card_id)}>Delete Card</p>
               </Dropdown>
             )}
           </div>
         </div>
         <div className="card-title">{title}</div>
         <div>
-          <p title={desc}>
+          <p title={description}>
             <AlignLeft />
           </p>
         </div>
