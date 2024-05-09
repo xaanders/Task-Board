@@ -1,5 +1,5 @@
 export interface ILabel {
-    label_id: number;
+    label_id?: number;
     color: string;
     text: string;
   }

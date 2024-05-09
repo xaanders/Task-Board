@@ -1,22 +1,22 @@
 import React, { useState } from "react";
 import { AlignLeft, CheckSquare, Clock, MoreHorizontal } from "react-feather";
 import { formatDate } from "../../helpers/helpers";
-import { ICard } from "../../interfaces/kanban";
+import { ICard } from "../../types/interfaces";
 import Chip from "../Common/Chip";
 import Dropdown from "../Dropdown/Dropdown";
 
 import "./Card.css";
-// import CardInfo from "./CardInfo/CardInfo";
+import CardInfo from "./CardInfo/CardInfo";
 interface CardProps {
   card: ICard;
-  boardId: number;
-  removeCard: (boardId: number, cardId: number) => void;
-  onDragEnd: (boardId: number, cardId: number) => void;
-  onDragEnter: (boardId: number, cardId: number) => void;
-  updateCard: (boardId: number, cardId: number, card: ICard) => void;
+  categoryId: number;
+  removeCard: (categoryId: number, cardId: number) => void;
+  onDragEnd: (categoryId: number, cardId: number) => void;
+  onDragEnter: (categoryId: number, cardId: number) => void;
+  updateCard: (categoryId: number, cardId: number, card: ICard) => void;
 }
 function Card(props: CardProps) {
-  const { card, boardId, removeCard, onDragEnd, onDragEnter, updateCard } =
+  const { card, categoryId, removeCard, onDragEnd, onDragEnter, updateCard } =
     props;
   const { card_id, title, description, date, tasks, labels } = card;
   const [showDropdown, setShowDropdown] = useState(false);
@@ -25,20 +25,19 @@ function Card(props: CardProps) {
   return (
     <>
       {showModal && (
-        // <CardInfo
-        //   onClose={() => setShowModal(false)}
-        //   card={card}
-        //   boardId={boardId}
-        //   updateCard={updateCard}
-        // />
-        <p> card info</p>
+          <CardInfo
+            onClose={() => setShowModal(false)}
+            card={card}
+            categoryId={categoryId}
+            updateCard={updateCard}
+            />
       )}
       <div
         className="card"
         key={card.card_id}
         draggable
-        onDragEnd={() => onDragEnd(boardId, card_id)}
-        onDragEnter={() => onDragEnter(boardId, card_id)}
+        onDragEnd={() => onDragEnd(categoryId, card_id)}
+        onDragEnter={() => onDragEnter(categoryId, card_id)}
         onClick={() => setShowModal(true)}
       >
         <div className="card-top">
@@ -60,7 +59,7 @@ function Card(props: CardProps) {
                 class="board-dropdown"
                 onClose={() => setShowDropdown(false)}
               >
-                <p onClick={() => removeCard(boardId, card_id)}>Delete Card</p>
+                <p onClick={() => removeCard(categoryId, card_id)}>Delete Card</p>
               </Dropdown>
             )}
           </div>

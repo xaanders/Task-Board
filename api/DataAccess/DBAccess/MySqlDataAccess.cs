@@ -53,6 +53,12 @@ public class MySqlDataAccess : IMySqlDataAccess
             parameters.Where(p => !ignore.Contains(p.Key))
             .ToDictionary(x => x.Key, x => x.Value);
 
+
+        if(parameters.TryGetValue("insertArray", out var array))
+        {
+
+        }
+
         bool isInsert = query.Contains("{{insert_params}}");
 
         if (isInsert)
@@ -78,6 +84,38 @@ public class MySqlDataAccess : IMySqlDataAccess
         var res = await ExecuteQuery(query, sqlParams);
 
         return res;
+    }
+
+    public async Task<List<Dictionary<string, object?>>> InsertMany(string? table, Dictionary<string, object?> parameters)
+    {
+        if (table == null)
+            throw new Exception("no table");
+
+        if (!parameters.TryGetValue("insertArray", out object? insertArray))
+            throw new Exception("no insertArray");
+
+        if (!parameters.TryGetValue("insertStatic", out object? insertStatic))
+            throw new Exception("no insertStatic");
+
+
+        var results = new List<Dictionary<string, object?>>();
+
+        foreach (var insertData in (List<Dictionary<string, object?>>?)insertArray ?? [])
+        {
+            foreach (var item in (Dictionary<string, object?>?)insertStatic ?? [])
+                insertData[item.Key] = item.Value;
+
+            var columns = string.Join(",", insertData.Keys);
+            var values = string.Join(",", insertData.Keys.Select(x => $"@{x}"));
+
+            var q = "INSERT " + table + " (" + columns + ") values (" + values + ")";
+
+            await ExecuteQuery(q, parameters);
+
+            //if (res != null)
+            //    results.Add(res);
+        }
+        return results;
     }
 }
 

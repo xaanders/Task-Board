@@ -21,7 +21,7 @@ public class Backend(Environment environment)
             if (template == null || !_env.templates.ContainsKey(template.ToString()))
                 throw new Exception("No template found");
 
-            if (template != null)
+            if (template != null || _u.parameters.TryGetValue("insertArray", out object? arr))
             {
                 Console.WriteLine("template:{0}", template);
 

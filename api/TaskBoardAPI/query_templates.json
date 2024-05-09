@@ -3,13 +3,16 @@
     "insert_board": "INSERT board {{insert_params}}",
     "update_board": "UPDATE board {{update_params}}",
 
-    "select_card": "SELECT id as card_id, description, title, board_id as category_id FROM card",
+    "select_card": "SELECT id as card_id, description, title, category_id, date FROM card where status = 1",
     "insert_card": "INSERT card {{insert_params}}",
+    "update_card": "UPDATE card {{update_params}}",
 
-    "select_task": "SELECT id as task_id, title, status, text, card_id, completed FROM task",
+    "select_task": "SELECT id as task_id, title, status, text, card_id, completed FROM task where status = 1",
     "insert_task": "INSERT task {{insert_params}}",
+    "update_task": "UPDATE task {{update_params}}",
 
-    "select_label": "SELECT id as label_id, color, text, card_id FROM label",
+    "select_label": "SELECT id as label_id, color, text, card_id FROM label where status = 1",
     "insert_label": "INSERT label {{insert_params}}",
+    "update_label": "UPDATE label {{update_params}}"
 
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { X } from "react-feather";
-import { ILabel } from "../../interfaces/kanban";
+import { ILabel } from "../../types/interfaces";
 interface ChipProps {
   item: ILabel;
   removeLabel?: (label: ILabel) => void;

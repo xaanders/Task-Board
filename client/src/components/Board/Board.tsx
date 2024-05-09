@@ -6,21 +6,20 @@ import Dropdown from "../Dropdown/Dropdown";
 import CustomInput from "../CustomInput/CustomInput";
 
 import "./Board.css";
-import { IBoard, ICard } from "../../interfaces/kanban";
-
+import { IBoard, ICard } from "../../types/interfaces";
 interface BoardProps {
-  board: IBoard;
-  addCard: (boardId: number, title: string) => void;
-  removeBoard: (boardId: number) => void;
-  removeCard: (boardId: number, cardId: number) => void;
-  onDragEnd: (boardId: number, cardId: number) => void;
-  onDragEnter: (boardId: number, cardId: number) => void;
-  updateCard: (boardId: number, cardId: number, card: ICard) => void;
+  category: IBoard;
+  addCard: (categoryId: number, title: string) => void;
+  removeBoard: (categoryId: number) => void;
+  removeCard: (categoryId: number, cardId: number) => void;
+  onDragEnd: (categoryId: number, cardId: number) => void;
+  onDragEnter: (categoryId: number, cardId: number) => void;
+  updateCard: (categoryId: number, cardId: number, card: ICard) => void;
 }
 
 function Board(props: BoardProps) {
   const {
-    board,
+    category,
     addCard,
     removeBoard,
     removeCard,
@@ -38,11 +37,11 @@ function Board(props: BoardProps) {
 
   return (
     <div className="board">
-      <div className="board-inner" key={board?.category_id}>
+      <div className="board-inner" key={category?.category_id}>
         <div className="board-header">
           <p className="board-header-title">
-            {board?.title}
-            <span>{board?.cards?.length || 0}</span>
+            {category?.title}
+            <span>{category?.cards?.length || 0}</span>
           </p>
           <div
             className="board-header-title-more"
@@ -52,17 +51,17 @@ function Board(props: BoardProps) {
               <Dropdown
                 class="board-dropdown"
               >
-                <p onClick={() => onClose(board.category_id)}>Delete Board</p>
+                <p onClick={() => onClose(category.category_id)}>Delete Board</p>
               </Dropdown>
             )}
           </div>
         </div>
         <div className="board-cards">
-          {board?.cards?.map((item) => (
+          {category?.cards?.map((item) => (
             <Card
               key={item.card_id}
               card={item}
-              boardId={board.category_id}
+              categoryId={category.category_id}
               removeCard={removeCard}
               onDragEnter={onDragEnter}
               onDragEnd={onDragEnd}
@@ -74,7 +73,7 @@ function Board(props: BoardProps) {
             placeholder="Enter Card Title"
             displayClass="board-add-card"
             editClass="board-add-card-edit"
-            onSubmit={(value: string) => addCard(board?.category_id, value)}
+            onSubmit={(value: string) => addCard(category?.category_id, value)}
           />
         </div>
       </div>

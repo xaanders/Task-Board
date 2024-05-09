@@ -1,95 +1,125 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Board from "../components/Board/Board";
 import "./Dashboard.css";
 import CustomInput from "../components/CustomInput/CustomInput";
-import { ICard, IBoard } from "../interfaces/kanban";
+import { ICard, IBoard } from "../types/interfaces";
 import { dbApiCall, fetchBoardList, updateLocalStorageBoards } from "../helpers/DataAccess";
+import { useAppContext } from "../store";
+import moment from "moment";
 
 function Dashboard() {
-  const [boards, setBoards] = useState<IBoard[]>([]);
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { showLoading } = useAppContext();
 
-  async function fetchData() {
+  const [categories, setCategories] = useState<IBoard[]>([]);
+
+  const fetchData = useCallback(async function () {
     try {
-      const boards: IBoard[] = await fetchBoardList();
-      setBoards(boards);
+      const categories: IBoard[] = await fetchBoardList();
+      if (categories.length > 0)
+        setCategories(categories);
     } catch (error) {
-      setBoards([]);
+      setCategories([]);
     }
-  }
+  }, [setCategories])
+
+  useEffect(() => {
+    showLoading(true);
+    fetchData();
+    showLoading(false);
+  }, [showLoading, fetchData]);
+
   // const [targetCard, setTargetCard] = useState({
   //   boardId: 0,
   //   cardId: 0,
   // });
 
   const addBoardHandler = async (name: string) => {
-    if(!name)
+    if (!name)
       return;
 
-    await dbApiCall({method: 'POST', query:'insert_board', parameters: {title: name}})
+    showLoading(true)
+    await dbApiCall({ method: 'POST', query: 'insert_board', parameters: { title: name, status: 1 } })
     fetchData()
+    showLoading(false)
   };
 
   const removeBoard = async (boardId: number) => {
-      console.log(boardId)
-      const boardIndex = boards.findIndex((item: IBoard) => item.category_id === boardId);
-      if (boardIndex < 0) return;
-  
-      const tempBoardsList = [...boards];
-      const res = await dbApiCall({method: 'PUT', query:'update_board', parameters: {status: 0, where: {id: boardId}}});
-  
-      if (!res) return;
-  
-      tempBoardsList.splice(boardIndex, 1);
-      setBoards(tempBoardsList);
+
+    const categoryIndex = categories.findIndex((item: IBoard) => item.category_id === boardId);
+    if (categoryIndex < 0) return;
+
+    const tempBoardsList = [...categories];
+    const res = await dbApiCall({ method: 'PUT', query: 'update_board', parameters: { status: 0, where: { id: boardId } } });
+
+    if (!res) return;
+
+    tempBoardsList.splice(categoryIndex, 1);
+    setCategories(tempBoardsList);
   };
 
-  // const addCardHandler = (boardId: number, title: string) => {
-  //   const boardIndex = boards.findIndex((item: IBoard) => item.id === boardId);
-  //   if (boardIndex < 0) return;
+  const addCardHandler = async (categoryId: number, title: string) => {
+    const categoryIndex = categories.findIndex((item: IBoard) => item.category_id === categoryId);
+    if (categoryIndex < 0) return;
 
-  //   const tempBoardsList = [...boards];
-  //   tempBoardsList[boardIndex].cards.push({
-  //     id: Date.now() + Math.random() * 2,
-  //     title,
-  //     labels: [],
-  //     date: "",
-  //     tasks: [],
-  //     description: "",
-  //   });
-  //   setBoards(tempBoardsList);
-  // };
+    console.log(moment().utc().format("YYYY-MM-DD HH:MM:ss"))
+    showLoading(true);
+    await dbApiCall({
+      method: "POST", query: 'insert_card', parameters: {
+        title,
+        date: moment().utc().format("YYYY-MM-DD HH:MM:ss"),
+        description: "",
+        category_id: categoryId,
+        status: 1
+      }
+    })
+    fetchData();
+    showLoading(false);
+  };
 
-  // const removeCard = (boardId: number, cardId: number) => {
-  //   const boardIndex = boards.findIndex((item: IBoard) => item.id === boardId);
-  //   if (boardIndex < 0) return;
+  const removeCard = async (boardId: number, cardId: number) => {
+    const boardIndex = categories.findIndex((item: IBoard) => item.category_id === boardId);
+    if (boardIndex < 0) return;
+    showLoading(true);
+    await dbApiCall({
+      method: "PUT", query: 'update_card', parameters: {
+        status: 0,
+        where: {
+          id: cardId,
+        }
+      }
+    })
+    fetchData();
+    showLoading(false);
+  };
 
-  //   const tempBoardsList = [...boards];
-  //   const cards = tempBoardsList[boardIndex].cards;
+  const updateCard = async (categoryId: number, cardId: number, card: ICard) => {
+    const boardIndex = categories.findIndex((item) => item.category_id === categoryId);
+    if (boardIndex < 0) return;
+    console.log('card to update', card)
+    showLoading(true);
+    await dbApiCall({
+      method: "PUT", query: 'update_card', parameters: {
+        title: card.title,
+        date: card.date,
+        description: card.description,
+        where: {
+          id: cardId
+        }
+      }
+    })
 
-  //   const cardIndex = cards.findIndex((item) => item.id === cardId);
-  //   if (cardIndex < 0) return;
+    fetchData();
+    showLoading(false);
+    // const tempBoardsList = [...boards];
+    // const cards = tempBoardsList[boardIndex].cards;
 
-  //   cards.splice(cardIndex, 1);
-  //   setBoards(tempBoardsList);
-  // };
+    // const cardIndex = cards.findIndex((item) => item.id === cardId);
+    // if (cardIndex < 0) return;
 
-  // const updateCard = (boardId: number, cardId: number, card: ICard) => {
-  //   const boardIndex = boards.findIndex((item) => item.id === boardId);
-  //   if (boardIndex < 0) return;
+    // tempBoardsList[boardIndex].cards[cardIndex] = card;
 
-  //   const tempBoardsList = [...boards];
-  //   const cards = tempBoardsList[boardIndex].cards;
-
-  //   const cardIndex = cards.findIndex((item) => item.id === cardId);
-  //   if (cardIndex < 0) return;
-
-  //   tempBoardsList[boardIndex].cards[cardIndex] = card;
-
-  //   setBoards(tempBoardsList);
-  // };
+    // setCategories(tempBoardsList);
+  };
 
   // const onDragEnd = (boardId: number, cardId: number) => {
   //   const sourceBoardIndex = boards.findIndex(
@@ -120,7 +150,7 @@ function Dashboard() {
   //     0,
   //     sourceCard,
   //   );
-  //   setBoards(tempBoardsList);
+  //   setCategories(tempBoardsList);
 
   //   setTargetCard({
   //     boardId: 0,
@@ -137,8 +167,8 @@ function Dashboard() {
   // };
 
   useEffect(() => {
-    updateLocalStorageBoards(boards);
-  }, [boards]);
+    updateLocalStorageBoards(categories);
+  }, [categories]);
   return (
     <div className="app">
       <div className="app-nav">
@@ -146,16 +176,16 @@ function Dashboard() {
       </div>
       <div className="app-boards-container">
         <div className="app-boards">
-          {boards.map((item) => (
+          {categories.map((item) => (
             <Board
               key={item.category_id}
-              board={item}
-              addCard={() => {} /*addCardHandler*/}
+              category={item}
+              addCard={addCardHandler}
               removeBoard={removeBoard}
-              removeCard={() => {}/*removeCard*/}
-              onDragEnd={() => {}/*onDragEnd*/}
-              onDragEnter={() => {}/*onDragEnter*/}
-              updateCard={() => {}/*updateCard*/}
+              removeCard={removeCard}
+              onDragEnd={() => { }/*onDragEnd*/}
+              onDragEnter={() => { }/*onDragEnter*/}
+              updateCard={updateCard}
             />
           ))}
           <div className="app-boards-last">

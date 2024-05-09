@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { IBoard, IDBCall } from "../interfaces/kanban";
+import { IBoard, IDBCall } from "../types/interfaces";
 import { getErrorMessage, settings } from "./helpers";
 
 const LocalStorageKeyName = "kanban-boards";
