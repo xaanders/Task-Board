@@ -1,4 +1,7 @@
 ﻿using DataAccess.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace TaskBoardAPI;
 
@@ -13,6 +16,44 @@ public class Backend(Environment environment)
         {
             await _u.ReadParams(request);
 
+
+            if (_u.parameters.TryGetValue("insertArray", out object? insertArray) && _u.parameters.TryGetValue("insertStatic", out object? insertStatic))
+            {
+                string? table = _u.GetParamStr("table") ?? throw new Exception("No table found");
+
+                var list = insertArray as JArray;
+                var stat = insertStatic as JObject;
+
+                _u.parameters["insertArray"] = list?.ToObject<List<Dictionary<string, object?>>>();
+                _u.parameters["insertStatic"] = stat?.ToObject<Dictionary<string, object?>>();
+
+                var res = await _u.DB.InsertMany(table, _u.parameters);
+
+                return res;
+            }
+
+            if (_u.parameters.TryGetValue("updateArray", out object? updateArray))
+            {
+                string? table = _u.GetParamStr("table") ?? throw new Exception("No table found");
+
+                var list = updateArray as JArray;
+
+                var arr = list?.ToObject<List<Dictionary<string, object?>>>();
+
+                foreach(var item in arr ?? [])
+                {
+                    var jWhere = item["where"] as JObject;
+                    item["where"] = jWhere?.ToObject<Dictionary<string, object?>>();
+                }
+
+                _u.parameters["updateArray"] = arr;
+
+                var res = await _u.DB.UpdateMany(table, _u.parameters);
+
+                return res;
+
+            }
+
             if (!_u.parameters.TryGetValue("t", out object? t))
                 throw new Exception("No query found");
 
@@ -21,14 +62,14 @@ public class Backend(Environment environment)
             if (template == null || !_env.templates.ContainsKey(template.ToString()))
                 throw new Exception("No template found");
 
-            if (template != null || _u.parameters.TryGetValue("insertArray", out object? arr))
+            if (template != null)
             {
-                Console.WriteLine("template:{0}", template);
 
                 var res = await _u.DB.GetTemplate(_env.templates[template!.ToString()], _u.parameters);
 
                 return res;
             }
+
 
             throw new Exception("Unknown method");
 

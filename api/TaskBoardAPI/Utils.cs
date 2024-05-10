@@ -23,23 +23,20 @@ public class Utils(Environment environment)
 
         if (request.HasFormContentType)
         {
-            Console.WriteLine("form content type");
-
             var form = await request.ReadFormAsync();
             form.ToList().ForEach(x => parameters[x.Key] = x.Value);
         }
         else
         {
-            Console.WriteLine("reader content type");
-
             using var reader = new StreamReader(request.Body);
             var content = await reader.ReadToEndAsync();
             var json = JsonConvert.DeserializeObject<Dictionary<string, object?>>(content);
             json?.ToList().ForEach(x => parameters[x.Key] = x.Value);
         }
+
         foreach(var kvp in parameters)
         {
-            Console.WriteLine($"{kvp.Key}");
+            Console.WriteLine($"{kvp.Key} {kvp.Value?.GetType()}");
         }
 
         if (!parameters.ContainsKey("where"))
