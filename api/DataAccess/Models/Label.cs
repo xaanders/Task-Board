@@ -8,7 +8,7 @@ namespace DataAccess.Models;
 
 public class Label(int id, string? color, string? text, int cardId)
 {
-    public int Label_Id { get; set; } = id;
+    public int Label_id { get; set; } = id;
     public string? Color { get; set; } = color;
     public string? Text { get; set; } = text;
     public int Card_id { get; set; } = cardId;

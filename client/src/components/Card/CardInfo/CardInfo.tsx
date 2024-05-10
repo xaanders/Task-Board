@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Calendar, CheckSquare, List, Tag, Trash, Type } from "react-feather";
+import { Calendar, CheckSquare, List, Tag, Trash, Type, X } from "react-feather";
 import { colorsList } from "../../../helpers/helpers";
 import Modal from "../../modal/Modal";
 import CustomInput from "../../CustomInput/CustomInput";
@@ -8,14 +8,16 @@ import "./CardInfo.css";
 import { ICard, ILabel, ITask } from "../../../types/interfaces";
 import Chip from "../../Common/Chip";
 import moment from "moment";
+
 interface CardInfoProps {
   onClose: () => void;
   card: ICard;
   categoryId: number;
   updateCard: (categoryId: number, cardId: number, card: ICard) => void;
+  createCard: (categoryId: number, card: ICard) => void;
 }
-function CardInfo(props: CardInfoProps) {
-  const { onClose, card, categoryId, updateCard } = props;
+
+function CardInfo({ onClose, card, categoryId, updateCard, createCard }: CardInfoProps) {
   const [selectedColor, setSelectedColor] = useState("");
   const [cardValues, setCardValues] = useState<ICard>({
     ...card,
@@ -33,20 +35,25 @@ function CardInfo(props: CardInfoProps) {
 
     setSelectedColor("");
     setCardValues(prev => ({
-        ...prev,
-        labels: [...cardValues.labels, label],
-      }));
+      ...prev,
+      labels: [...cardValues.labels, label],
+    }));
   };
 
   const removeLabel = (label: ILabel) => {
-    const tempLabels = cardValues.labels.filter(
-      (item) => item.text !== label.text,
-    );
-
+    const labels = cardValues.labels
+    .map(x => {
+      if (label.label_id && x.label_id === label.label_id)
+        return { ...x, status: 0 }
+      else
+        return x
+    })
+    .filter(x => !label.label_id && label.text !== x.text && label.color !== x.color); // remove label which is not yet saved
+    
     setCardValues(prev => ({
-        ...prev,
-        labels: tempLabels,
-      }));
+      ...prev,
+      labels,
+    }));
   };
 
   const addTask = (value: string) => {
@@ -55,34 +62,42 @@ function CardInfo(props: CardInfoProps) {
       text: value,
     };
     setCardValues(prev => ({
-        ...prev,
-        tasks: [...cardValues.tasks, task],
-      }));
+      ...prev,
+      tasks: [...cardValues.tasks, task],
+    }));
   };
 
-  const removeTask = (id: number) => {
+  const removeTask = (id?: number) => {
+    if (!id)
+      return;
+
+    const tasks = cardValues.tasks.map(x => {
+      if (x.task_id === id)
+        return { ...x, status: 0 }
+      else
+        return x
+    })
+
+    setCardValues(prev => ({
+      ...prev,
+      tasks,
+    }));
+
+  };
+
+  const updateTask = (value: boolean, id?: number) => {
     const tasks = [...cardValues.tasks];
 
-    const tempTasks = tasks.filter((item) => item.task_id !== id);
+    const index = tasks.findIndex((item) => item.task_id === id);
+    if (index < 0) return;
+
+    tasks[index].completed = Boolean(value);
+
     setCardValues(prev => ({
-        ...prev,
-        tasks: tempTasks,
-      }));
+      ...prev,
+      tasks,
+    }));
   };
-
-//   const updateTask = (id: number, value: boolean) => {
-//     const tasks = [...cardValues.tasks];
-
-//     const index = tasks.findIndex((item) => item.task_id === id);
-//     if (index < 0) return;
-
-//     tasks[index].completed = Boolean(value);
-
-//     setCardValues({
-//       ...cardValues,
-//       tasks,
-//     });
-//   };
 
   const calculatePercent = () => {
     if (!cardValues.tasks?.length) return 0;
@@ -93,20 +108,21 @@ function CardInfo(props: CardInfoProps) {
   };
 
 
-
-//   useEffect(() => {
-//     if (updateCard) updateCard(categoryId, cardValues.card_id, cardValues);
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [cardValues]);
-
-  console.log(cardValues)
   const calculatedPercent = calculatePercent();
 
   async function saveCard(e: any) {
     e.preventDefault();
-    updateCard(categoryId, cardValues.card_id, cardValues);
+    const cardId = cardValues.card_id || null;
+
+    if (!cardValues.title)
+      return;
+
+    if (cardId)
+      updateCard(categoryId, cardId, cardValues);
+    else
+      createCard(categoryId, cardValues);
     onClose();
-  }; 
+  };
 
   return (
     <Modal onClose={onClose}>
@@ -118,7 +134,7 @@ function CardInfo(props: CardInfoProps) {
           </div>
           <CustomInput
             defaultValue={cardValues.title}
-            text={cardValues.title}
+            text={cardValues.title || "Add a Title"}
             placeholder="Enter Title"
             onSubmit={(v) => updateState(v, 'title')}
           />
@@ -140,11 +156,11 @@ function CardInfo(props: CardInfoProps) {
         <div className="cardinfo-box">
           <div className="cardinfo-box-title">
             <Calendar />
-            <p>Date</p> 
+            <p>Date</p>
           </div>
           <input
             type="date"
-            defaultValue={cardValues.date}
+            defaultValue={moment(cardValues.date).format("YYYY-MM-DD")}
             min={new Date().toISOString().substr(0, 10)}
             onChange={(e) => e.target.value && updateState(e.target.value, 'date')}
           />
@@ -157,7 +173,12 @@ function CardInfo(props: CardInfoProps) {
           </div>
           <div className="cardinfo-box-labels">
             {cardValues.labels?.map((item, index) => (
-              <Chip key={index} item={item} removeLabel={removeLabel} />
+              <Chip
+                key={index}
+                item={item}
+                classes={item.status === 0 ? "disabled" : ""}
+                removeLabel={() => removeLabel(item)}
+              />
             ))}
           </div>
           <ul>
@@ -184,27 +205,32 @@ function CardInfo(props: CardInfoProps) {
             <CheckSquare />
             <p>Tasks</p>
           </div>
-          <div className="cardinfo-box-progress-bar">
-            <div
-              className="cardinfo-box-progress"
-              style={{
-                width: `${calculatedPercent}%`,
-                backgroundColor: calculatedPercent === 100 ? "limegreen" : "",
-              }}
-            />
+          <div>
+            <p>Progress bar:</p>
+            <div className="cardinfo-box-progress-bar">
+              <div
+                className="cardinfo-box-progress"
+                style={{
+                  width: `${calculatedPercent}%`,
+                  backgroundColor: calculatedPercent === 100 ? "limegreen" : "",
+                }}
+              />
+            </div>
           </div>
           <div className="cardinfo-box-task-list">
             {cardValues.tasks?.map((item) => (
               <div key={item.task_id} className="cardinfo-box-task-checkbox">
                 <input
                   type="checkbox"
+                  disabled={item.status === 0}
+                  className={item.status === 0 ? "disabled" : ""}
                   defaultChecked={item.completed}
-                //   onChange={(event) =>
-                    // updateTask(item.task_id, event.target.checked)
-                //   }
+                  onChange={(event) =>
+                    updateTask(event.target.checked, item.task_id)
+                  }
                 />
                 <p className={item.completed ? "completed" : ""}>{item.text}</p>
-                {/* <Trash onClick={() => removeTask(item.id)} /> */}
+                <Trash onClick={() => removeTask(item.task_id)} className={item.status === 0 ? "disabled" : ""} />
               </div>
             ))}
           </div>
@@ -216,7 +242,7 @@ function CardInfo(props: CardInfoProps) {
         </div>
 
         <div className="actions">
-          <button type="button" onClick={saveCard}>Save</button>
+          <button type="button" disabled={!cardValues.title} className="save-btn" onClick={saveCard}>Save</button>
         </div>
       </div>
     </Modal>

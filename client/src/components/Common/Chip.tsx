@@ -4,11 +4,11 @@ import { ILabel } from "../../types/interfaces";
 interface ChipProps {
   item: ILabel;
   removeLabel?: (label: ILabel) => void;
+  classes?: string
 }
-export default function Chip(props: ChipProps) {
-  const { item, removeLabel } = props;
+export default function Chip({ item, removeLabel, classes }: ChipProps) {
   return (
-    <label style={{ backgroundColor: item.color, color: "#fff" }}>
+    <label className={classes} style={{ backgroundColor: item.color, color: "#fff" }}>
       {item.text}
       {removeLabel && <X onClick={() => removeLabel(item)} />}
     </label>

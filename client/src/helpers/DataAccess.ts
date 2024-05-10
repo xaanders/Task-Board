@@ -80,7 +80,7 @@ export function updateLocalStorageBoards(boards: IBoard[]) {
   localStorage.setItem(LocalStorageKeyName, JSON.stringify(boards));
 }
 
-export async function dbApiCall({ method, query, parameters }: IDBCall) {
+export async function dbApiCall({ method = 'POST', query, parameters }: IDBCall) {
   const api = new BoardAPI();
 
   let path = settings.API + `universal?t=${query}`;
@@ -90,23 +90,41 @@ export async function dbApiCall({ method, query, parameters }: IDBCall) {
   try {
     for (const key in parameters) {
       if (Object.prototype.hasOwnProperty.call(parameters, key)) {
-        if (method === 'GET' && !ignore.includes(key)) 
+        if (method === 'GET' && !ignore.includes(key))
           path += `&${key}=${parameters[key]}`
 
-        if(method !== 'GET')
+        if (method !== 'GET')
           body[key] = parameters[key];
       }
     }
 
     const res = await api.dbCall({ path, body: JSON.stringify(body), method })
 
-    if (res["Error"]) { 
+    if (res["Error"]) {
       throw new Error(res['Error'] || "Unknown error");
     }
-    
+
     return res;
 
   } catch (error) {
-    toast(getErrorMessage(error), {type: 'error'});
+    toast(getErrorMessage(error), { type: 'error' });
+  }
+}
+
+export async function apiCall({ method, parameters }: IDBCall) {
+  const api = new BoardAPI();
+
+  let path = settings.API + `universal`;
+  try {
+
+    const res: {Error: string, errors: string[], data: number[]} = await api.dbCall({ path, body: JSON.stringify(parameters), method })
+
+    if (res["Error"]) {
+      throw new Error(res['Error'] || "Unknown error");
+    }
+    return res;
+
+  } catch (error) {
+    toast(getErrorMessage(error), { type: 'error' });
   }
 }

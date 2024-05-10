@@ -7,6 +7,7 @@ import CustomInput from "../CustomInput/CustomInput";
 
 import "./Board.css";
 import { IBoard, ICard } from "../../types/interfaces";
+import CardInfo from "../Card/CardInfo/CardInfo";
 interface BoardProps {
   category: IBoard;
   addCard: (categoryId: number, title: string) => void;
@@ -15,18 +16,19 @@ interface BoardProps {
   onDragEnd: (categoryId: number, cardId: number) => void;
   onDragEnter: (categoryId: number, cardId: number) => void;
   updateCard: (categoryId: number, cardId: number, card: ICard) => void;
+  createCard: (categoryId: number, card: ICard) => void;
 }
 
-function Board(props: BoardProps) {
-  const {
-    category,
-    addCard,
-    removeBoard,
-    removeCard,
-    onDragEnd,
-    onDragEnter,
-    updateCard,
-  } = props;
+function Board({ category,
+  addCard,
+  removeBoard,
+  removeCard,
+  onDragEnd,
+  onDragEnter,
+  updateCard,
+  createCard }: BoardProps) {
+
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   console.log(showDropdown)
 
@@ -46,7 +48,7 @@ function Board(props: BoardProps) {
           <div
             className="board-header-title-more"
           >
-            <MoreHorizontal onClick={() => setShowDropdown(prev => !prev)}/>
+            <MoreHorizontal onClick={() => setShowDropdown(prev => !prev)} />
             {showDropdown && (
               <Dropdown
                 class="board-dropdown"
@@ -66,15 +68,33 @@ function Board(props: BoardProps) {
               onDragEnter={onDragEnter}
               onDragEnd={onDragEnd}
               updateCard={updateCard}
+              createCard={createCard}
             />
           ))}
-          <CustomInput
+          {/* <CustomInput
             text="+ Add Card"
             placeholder="Enter Card Title"
             displayClass="board-add-card"
             editClass="board-add-card-edit"
             onSubmit={(value: string) => addCard(category?.category_id, value)}
-          />
+          /> */}
+          <button onClick={() => setShowAddCardModal(true)} className="add-btn">+ Add Card</button>
+          {showAddCardModal && (
+            <CardInfo
+              onClose={() => setShowAddCardModal(false)}
+              card={{
+                card_id: 0,
+                title: "",
+                labels: [],
+                date: "",
+                tasks: [],
+                description: ""
+              }}
+              categoryId={category.category_id}
+              updateCard={updateCard}
+              createCard={createCard}
+            />
+          )}
         </div>
       </div>
     </div>

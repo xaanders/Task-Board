@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { AlignLeft, CheckSquare, Clock, MoreHorizontal } from "react-feather";
-import { formatDate } from "../../helpers/helpers";
 import { ICard } from "../../types/interfaces";
 import Chip from "../Common/Chip";
 import Dropdown from "../Dropdown/Dropdown";
 
 import "./Card.css";
 import CardInfo from "./CardInfo/CardInfo";
+import moment from "moment";
 interface CardProps {
   card: ICard;
   categoryId: number;
@@ -14,10 +14,10 @@ interface CardProps {
   onDragEnd: (categoryId: number, cardId: number) => void;
   onDragEnter: (categoryId: number, cardId: number) => void;
   updateCard: (categoryId: number, cardId: number, card: ICard) => void;
+  createCard: (categoryId: number, card: ICard) => void;
 }
-function Card(props: CardProps) {
-  const { card, categoryId, removeCard, onDragEnd, onDragEnter, updateCard } =
-    props;
+function Card({ card, categoryId, removeCard, onDragEnd, onDragEnter, updateCard, createCard }: CardProps) {
+  
   const { card_id, title, description, date, tasks, labels } = card;
   const [showDropdown, setShowDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -30,6 +30,7 @@ function Card(props: CardProps) {
             card={card}
             categoryId={categoryId}
             updateCard={updateCard}
+            createCard={createCard}
             />
       )}
       <div
@@ -74,7 +75,7 @@ function Card(props: CardProps) {
           {date && (
             <p className="card-footer-item">
               <Clock className="card-footer-icon" />
-              {formatDate(date)}
+              {moment(date).format("MMM DD, YYYY")}
             </p>
           )}
           {tasks && tasks?.length > 0 && (

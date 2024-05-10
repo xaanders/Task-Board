@@ -34,9 +34,9 @@ public class MySqlDataAccess : IMySqlDataAccess
                 dynamicParameters.Add(kvp.Key, kvp.Value);
             }
 
-            await connection.ExecuteAsync(query, dynamicParameters);
+            var res = await connection.QueryAsync(query, dynamicParameters);
 
-            return [];
+            return res;
         }
         else
         {
@@ -44,7 +44,7 @@ public class MySqlDataAccess : IMySqlDataAccess
         }
     }
 
-    public async Task<dynamic> GetTemplate(string query, Dictionary<string, object?> parameters)
+    public async Task<dynamic> GetTemplate(string query, Dictionary<string, object?> parameters, bool returnInsertId = true)
     {
 
         List<string?> ignore = ["t", "where"];
@@ -55,10 +55,13 @@ public class MySqlDataAccess : IMySqlDataAccess
 
         bool isInsert = query.Contains("{{insert_params}}");
 
+        string returnInsertedIds = returnInsertId ? " SELECT LAST_INSERT_ID() as lastInsertId" : "";
+
         if (isInsert)
             query = query.Replace("{{insert_params}}",
                 $"({string.Join(", ", sqlParams.Keys)}) values " +
-                $"({string.Join(", ", sqlParams.Keys.Select(key => $"@{key}"))})");
+                $"({string.Join(", ", sqlParams.Keys.Select(key => $"@{key}"))});"
+                + returnInsertedIds);
 
         bool isUpdate = query.Contains("{{update_params}}");
         if (isUpdate)
@@ -80,7 +83,7 @@ public class MySqlDataAccess : IMySqlDataAccess
         return res;
     }
 
-    public async Task<dynamic> InsertMany(string? table, Dictionary<string, object?> parameters)
+    public async Task<dynamic> InsertMany(string? table, Dictionary<string, object?> parameters, bool returnInsertId = true)
     {
         if (table == null)
             throw new Exception("no table");
@@ -92,7 +95,7 @@ public class MySqlDataAccess : IMySqlDataAccess
             throw new Exception("no insertStatic");
 
 
-        var results = new List<Dictionary<string, object?>>();
+        var results = new List<string>();
 
         foreach (Dictionary<string, object?> insertData in (List<Dictionary<string, object?>>?)insertArray ?? [])
         {
@@ -102,12 +105,14 @@ public class MySqlDataAccess : IMySqlDataAccess
             var columns = string.Join(",", insertData.Keys);
             var values = string.Join(",", insertData.Keys.Select(x => $"@{x}"));
 
-            var q = "INSERT " + table + " (" + columns + ") values (" + values + ")";
+            string returnInsertedIds = returnInsertId ? "SELECT LAST_INSERT_ID() as lastInsertId" : "";
+
+            var q = $"INSERT {table}  ({columns}) values ({values}); {returnInsertedIds}";
 
             var res = await ExecuteQuery(q, insertData);
 
-            Console.WriteLine(res);
-           
+            if (returnInsertId)
+                results.Add(res.ToList()[0]);
         }
         return results;
     }
@@ -119,15 +124,15 @@ public class MySqlDataAccess : IMySqlDataAccess
         if (!parameters.TryGetValue("updateArray", out object? updateArray))
             throw new Exception("no updateArray");
 
-        var data = new List<Dictionary<string, object?>>();
+        var data = new List<object?>();
         var errors = new List<Dictionary<string, object?>>();
 
-        foreach (Dictionary<string, object?> updateData in (List<Dictionary<string, object?>>?) updateArray ?? [])
+        foreach (Dictionary<string, object?> updateData in (List<Dictionary<string, object?>>?)updateArray ?? [])
         {
 
-            var where = (Dictionary<string, object>?) updateData["where"];
+            var where = (Dictionary<string, object>?)updateData["where"];
 
-            if(where is null)
+            if (where is null)
             {
                 errors.Add(updateData);
                 continue;
@@ -135,25 +140,24 @@ public class MySqlDataAccess : IMySqlDataAccess
 
             updateData.Remove("where");
 
-            string upd = string.Join(",", updateData.Select(x => $"{x.Key} = @{x.Key}"));
-            
-            foreach(var kvp in where)
+            string upd = string.Join(", ", updateData.Select(x => $"{x.Key} = @{x.Key}"));
+
+            foreach (var kvp in where)
             {
                 updateData[$"where_{kvp.Key}"] = kvp.Value;
             };
 
-            string updWhere = string.Join(",", where.Select(x => $"{x.Key} = @where_{x.Key}"));
+            string updWhere = string.Join(" and ", where.Select(x => $"{x.Key} = @where_{x.Key}"));
 
             string q = "UPDATE " + table + $" SET {upd} where {updWhere}";
 
-            Console.WriteLine("q---- {0}", q);
+            await ExecuteQuery(q, updateData);
 
-            var res = await ExecuteQuery(q, updateData);
         }
-        
 
 
-        return new { data, errors};
+
+        return new { data, errors };
     }
 
 }

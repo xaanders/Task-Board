@@ -96,6 +96,7 @@
 
 .cardinfo-box-task-checkbox {
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
@@ -143,3 +144,4 @@
 .cardinfo .actions button:hover {
   background-color: #046daa;
 }
+

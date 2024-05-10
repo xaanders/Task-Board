@@ -11,7 +11,7 @@
     "insert_task": "INSERT task {{insert_params}}",
     "update_task": "UPDATE task {{update_params}}",
 
-    "select_label": "SELECT id as label_id, color, text, card_id FROM label where status = 1",
+    "select_label": "SELECT id as label_id, color, text, card_id FROM label where status = 1 and card_id is not null",
     "insert_label": "INSERT label {{insert_params}}",
     "update_label": "UPDATE label {{update_params}}"
 

@@ -3,7 +3,7 @@ import Board from "../components/Board/Board";
 import "./Dashboard.css";
 import CustomInput from "../components/CustomInput/CustomInput";
 import { ICard, IBoard } from "../types/interfaces";
-import { dbApiCall, fetchBoardList, updateLocalStorageBoards } from "../helpers/DataAccess";
+import { apiCall, dbApiCall, fetchBoardList, updateLocalStorageBoards } from "../helpers/DataAccess";
 import { useAppContext } from "../store";
 import moment from "moment";
 
@@ -62,7 +62,9 @@ function Dashboard() {
     if (categoryIndex < 0) return;
 
     console.log(moment().utc().format("YYYY-MM-DD HH:MM:ss"))
+
     showLoading(true);
+
     await dbApiCall({
       method: "POST", query: 'insert_card', parameters: {
         title,
@@ -96,8 +98,10 @@ function Dashboard() {
     const boardIndex = categories.findIndex((item) => item.category_id === categoryId);
     if (boardIndex < 0) return;
     console.log('card to update', card)
+
     showLoading(true);
-    await dbApiCall({
+
+    await dbApiCall({ // update card data
       method: "PUT", query: 'update_card', parameters: {
         title: card.title,
         date: card.date,
@@ -108,19 +112,102 @@ function Dashboard() {
       }
     })
 
+    const newLabels = card.labels.filter(x => !x.label_id && !x.card_id);
+    const newTasks = card.tasks.filter(x => !x.task_id && !x.card_id);
+
+    const oldLabels = card.labels.filter(x => x.label_id && x.card_id);
+    const oldTasks = card.tasks.filter(x => x.task_id && x.card_id);
+
+    if (newLabels.length > 0)
+      await apiCall({ // insert new labels
+        method: "POST",
+        parameters: {
+          table: "label",
+          insertArray: newLabels,
+          insertStatic: { status: 1, card_id: cardId },
+          returnInsertedId: false
+        }
+      })
+
+
+    if (oldLabels.length > 0)
+      await apiCall({ // update old tasks
+        method: "PUT",
+        parameters: {
+          table: "label",
+          updateArray: oldLabels.map(x => ({ color: x.color, text: x.text, status: x.status === 0 ? 0 : 1, where: { id: x.label_id } }))
+        }
+      })
+
+    if (newTasks.length > 0)
+      await apiCall({ // insert its tasks
+        method: "POST",
+        parameters: {
+          table: "task",
+          insertArray: newTasks,
+          insertStatic: { status: 1, card_id: cardId },
+          returnInsertedId: false
+        }
+      })
+
+    if (oldTasks.length > 0)
+      await apiCall({ // update old tasks
+        method: "PUT",
+        parameters: {
+          table: "task",
+          updateArray: oldTasks.map(x => ({ completed: x.completed, text: x.text, status: x.status === 0 ? 0 : 1, where: { id: x.task_id } }))
+        }
+      })
+
     fetchData();
-    showLoading(false);
-    // const tempBoardsList = [...boards];
-    // const cards = tempBoardsList[boardIndex].cards;
-
-    // const cardIndex = cards.findIndex((item) => item.id === cardId);
-    // if (cardIndex < 0) return;
-
-    // tempBoardsList[boardIndex].cards[cardIndex] = card;
-
-    // setCategories(tempBoardsList);
+    // showLoading(false);
   };
 
+  const createCard = async (categoryId: number, card: ICard) => {
+    const boardIndex = categories.findIndex((item) => item.category_id === categoryId);
+    if (boardIndex < 0) return;
+    console.log('card to update', card)
+
+    showLoading(true);
+
+    const res = await dbApiCall({ // insert card data
+      method: "POST", query: 'insert_card', parameters: {
+        title: card.title,
+        date: card.date || null,
+        description: card.description || null,
+        category_id: categoryId,
+        status: 1,
+      }
+    })
+
+    const id = res[0].lastInsertId;
+
+    if (card.labels.length > 0 && id)
+      await apiCall({ // insert its labels
+        method: "POST",
+        parameters: {
+          table: "label",
+          insertArray: card.labels,
+          insertStatic: { status: 1, card_id: id },
+          returnInsertedId: false
+        }
+      })
+
+    if (card.tasks.length > 0 && id)
+      await apiCall({ // insert its tasks
+        method: "POST",
+        parameters: {
+          table: "task",
+          insertArray: card.tasks,
+          insertStatic: { status: 1, card_id: id },
+          returnInsertedId: false
+        }
+      })
+
+    fetchData();
+    showLoading(false);
+
+  }
   // const onDragEnd = (boardId: number, cardId: number) => {
   //   const sourceBoardIndex = boards.findIndex(
   //     (item: IBoard) => item.id === boardId,
@@ -186,6 +273,7 @@ function Dashboard() {
               onDragEnd={() => { }/*onDragEnd*/}
               onDragEnter={() => { }/*onDragEnter*/}
               updateCard={updateCard}
+              createCard={createCard}
             />
           ))}
           <div className="app-boards-last">
@@ -203,6 +291,4 @@ function Dashboard() {
     </div>
   );
 }
-
 export default Dashboard;
-

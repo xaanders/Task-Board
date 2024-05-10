@@ -2,19 +2,24 @@ export interface ILabel {
     label_id?: number;
     color: string;
     text: string;
+    card_id?: number; 
+    status?: number;
+
   }
   
   export interface ITask {
     task_id?: number;
     completed: boolean;
     text: string;
+    card_id?: number;
+    status?: number;
   }
   
   export interface ICard {
     card_id: number;
     title: string;
     labels: ILabel[];
-    date: string;
+    date?: string;
     tasks: ITask[];
     description?: string;
   }
@@ -27,6 +32,7 @@ export interface ILabel {
   
   export interface IDBCall {
     method: string, 
-    query: string, 
+    query?: string,
+    table?: string, 
     parameters: Record<string, unknown>
   }

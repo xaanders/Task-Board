@@ -16,6 +16,10 @@ public class Backend(Environment environment)
         {
             await _u.ReadParams(request);
 
+            bool returnInsertedId = bool.Parse(_u.GetParamStr("returnInsertedId") ?? "true");
+
+            if (returnInsertedId)
+                _u.parameters.Remove("returnInsertedId");
 
             if (_u.parameters.TryGetValue("insertArray", out object? insertArray) && _u.parameters.TryGetValue("insertStatic", out object? insertStatic))
             {
@@ -27,7 +31,8 @@ public class Backend(Environment environment)
                 _u.parameters["insertArray"] = list?.ToObject<List<Dictionary<string, object?>>>();
                 _u.parameters["insertStatic"] = stat?.ToObject<Dictionary<string, object?>>();
 
-                var res = await _u.DB.InsertMany(table, _u.parameters);
+
+                var res = await _u.DB.InsertMany(table, _u.parameters, returnInsertedId);
 
                 return res;
             }
@@ -64,15 +69,12 @@ public class Backend(Environment environment)
 
             if (template != null)
             {
-
-                var res = await _u.DB.GetTemplate(_env.templates[template!.ToString()], _u.parameters);
+                var res = await _u.DB.GetTemplate(_env.templates[template!.ToString()], _u.parameters, returnInsertedId);
 
                 return res;
             }
 
-
             throw new Exception("Unknown method");
-
         }
         catch (Exception ex)
         {
