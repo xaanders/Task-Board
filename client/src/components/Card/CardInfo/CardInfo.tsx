@@ -41,15 +41,23 @@ function CardInfo({ onClose, card, categoryId, updateCard, createCard }: CardInf
   };
 
   const removeLabel = (label: ILabel) => {
+    console.log(label)
+    if (!label.label_id) {
+      setCardValues(prev => ({
+        ...prev,
+        labels: prev.labels.filter(l => l.text !== label.text),
+      }));
+      return;
+    }
+
     const labels = cardValues.labels
-    .map(x => {
-      if (label.label_id && x.label_id === label.label_id)
-        return { ...x, status: 0 }
-      else
-        return x
-    })
-    .filter(x => !label.label_id && label.text !== x.text && label.color !== x.color); // remove label which is not yet saved
-    
+      .map(x => {
+        if (label.label_id && x.label_id === label.label_id)
+          return { ...x, status: 0 }
+        else
+          return x
+      })
+
     setCardValues(prev => ({
       ...prev,
       labels,
@@ -146,6 +154,7 @@ function CardInfo({ onClose, card, categoryId, updateCard, createCard }: CardInf
             <p>Description</p>
           </div>
           <CustomInput
+            textArea
             defaultValue={cardValues.description}
             text={cardValues.description || "Add a Description"}
             placeholder="Enter description"

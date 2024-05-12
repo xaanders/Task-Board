@@ -6,6 +6,7 @@ import { ICard, IBoard } from "../types/interfaces";
 import { apiCall, dbApiCall, fetchBoardList, updateLocalStorageBoards } from "../helpers/DataAccess";
 import { useAppContext } from "../store";
 import moment from "moment";
+import Sidebar from "../components/Sidebar";
 
 function Dashboard() {
   const { showLoading } = useAppContext();
@@ -28,10 +29,9 @@ function Dashboard() {
     showLoading(false);
   }, [showLoading, fetchData]);
 
-  // const [targetCard, setTargetCard] = useState({
-  //   boardId: 0,
-  //   cardId: 0,
-  // });
+  const [targetCard, setTargetCard] = useState({
+    categoryId: 0,
+  });
 
   const addBoardHandler = async (name: string) => {
     if (!name)
@@ -106,6 +106,7 @@ function Dashboard() {
         title: card.title,
         date: card.date,
         description: card.description,
+        category_id: categoryId,
         where: {
           id: cardId
         }
@@ -160,7 +161,7 @@ function Dashboard() {
       })
 
     fetchData();
-    // showLoading(false);
+    showLoading(false);
   };
 
   const createCard = async (categoryId: number, card: ICard) => {
@@ -208,61 +209,61 @@ function Dashboard() {
     showLoading(false);
 
   }
-  // const onDragEnd = (boardId: number, cardId: number) => {
-  //   const sourceBoardIndex = boards.findIndex(
-  //     (item: IBoard) => item.id === boardId,
-  //   );
-  //   if (sourceBoardIndex < 0) return;
+  const onDragEnd = async (categoryId: number, cardId: number, card: ICard) => {
+    // const sourceBoardIndex = categories.findIndex(
+    //   (item: IBoard) => item.category_id === categoryId,
+    // );
+    // if (sourceBoardIndex < 0) return;
 
-  //   const sourceCardIndex = boards[sourceBoardIndex]?.cards?.findIndex(
-  //     (item) => item.id === cardId,
-  //   );
-  //   if (sourceCardIndex < 0) return;
+    // const sourceCardIndex = categories[sourceBoardIndex]?.cards?.findIndex(
+    //   (item) => item.card_id === cardId,
+    // );
+    // if (sourceCardIndex < 0) return;
 
-  //   const targetBoardIndex = boards.findIndex(
-  //     (item: IBoard) => item.id === targetCard.boardId,
-  //   );
-  //   if (targetBoardIndex < 0) return;
+    // const targetBoardIndex = categories.findIndex(
+    //   (item: IBoard) => item.category_id === targetCard.categoryId,
+    // );
+    // if (targetBoardIndex < 0) return;
 
-  //   const targetCardIndex = boards[targetBoardIndex]?.cards?.findIndex(
-  //     (item) => item.id === targetCard.cardId,
-  //   );
-  //   if (targetCardIndex < 0) return;
+    // const targetCardIndex = categories[targetBoardIndex]?.cards?.findIndex(
+    //   (item) => item.card_id === targetCard.cardId,
+    // );
+    // if (targetCardIndex < 0) return;
+    console.log('targetCard', targetCard)
+    console.log('current Card', card)
+    if (!categoryId || !cardId)
+      return;
 
-  //   const tempBoardsList = [...boards];
-  //   const sourceCard = tempBoardsList[sourceBoardIndex].cards[sourceCardIndex];
-  //   tempBoardsList[sourceBoardIndex].cards.splice(sourceCardIndex, 1);
-  //   tempBoardsList[targetBoardIndex].cards.splice(
-  //     targetCardIndex,
-  //     0,
-  //     sourceCard,
-  //   );
-  //   setCategories(tempBoardsList);
+    card.category_id = targetCard.categoryId;
 
-  //   setTargetCard({
-  //     boardId: 0,
-  //     cardId: 0,
-  //   });
-  // };
+    await updateCard(targetCard.categoryId, cardId, card);
+    await fetchData();
 
-  // const onDragEnter = (boardId: number, cardId: number) => {
-  //   if (targetCard.cardId === cardId) return;
-  //   setTargetCard({
-  //     boardId: boardId,
-  //     cardId: cardId,
-  //   });
-  // };
+    setTargetCard({
+      categoryId: 0,
+    });
+  };
 
-  useEffect(() => {
-    updateLocalStorageBoards(categories);
-  }, [categories]);
+  const onDragEnter = (e: any, categoryId: number) => {
+    // if (targetCard.cardId === cardId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+
+    setTargetCard({
+      categoryId: categoryId,
+    });
+  };
+
   return (
     <div className="app">
-      <div className="app-nav">
-        <h1>Task Board</h1>
-      </div>
-      <div className="app-boards-container">
-        <div className="app-boards">
+      <Sidebar projects={[]} />
+      <main className="app-boards-container">
+        <header className="app-nav">
+          <div className="main-title">
+            <h1>Task Board</h1>
+          </div>
+        </header>
+        <div className="app-boards" onDragOver={(e) => e.preventDefault()}>
           {categories.map((item) => (
             <Board
               key={item.category_id}
@@ -270,8 +271,8 @@ function Dashboard() {
               addCard={addCardHandler}
               removeBoard={removeBoard}
               removeCard={removeCard}
-              onDragEnd={() => { }/*onDragEnd*/}
-              onDragEnter={() => { }/*onDragEnter*/}
+              onDragEnd={onDragEnd}
+              onDragEnter={onDragEnter}
               updateCard={updateCard}
               createCard={createCard}
             />
@@ -287,7 +288,7 @@ function Dashboard() {
             />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

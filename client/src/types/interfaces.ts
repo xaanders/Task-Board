@@ -22,6 +22,7 @@ export interface ILabel {
     date?: string;
     tasks: ITask[];
     description?: string;
+    category_id?: number;
   }
   
   export interface IBoard {

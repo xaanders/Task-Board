@@ -5,6 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #fff;
 }
 
 code {
@@ -21,7 +22,6 @@ code {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0,0,0, 0.5)
 }
 
 .add-btn {

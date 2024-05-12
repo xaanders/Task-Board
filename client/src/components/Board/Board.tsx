@@ -13,14 +13,13 @@ interface BoardProps {
   addCard: (categoryId: number, title: string) => void;
   removeBoard: (categoryId: number) => void;
   removeCard: (categoryId: number, cardId: number) => void;
-  onDragEnd: (categoryId: number, cardId: number) => void;
-  onDragEnter: (categoryId: number, cardId: number) => void;
+  onDragEnd: (categoryId: number, cardId: number, card: ICard) => void;
+  onDragEnter: (e: any, categoryId: number) => void;
   updateCard: (categoryId: number, cardId: number, card: ICard) => void;
   createCard: (categoryId: number, card: ICard) => void;
 }
 
 function Board({ category,
-  addCard,
   removeBoard,
   removeCard,
   onDragEnd,
@@ -30,7 +29,6 @@ function Board({ category,
 
   const [showAddCardModal, setShowAddCardModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  console.log(showDropdown)
 
   async function onClose(id: number) {
     setShowDropdown(prev => !prev);
@@ -38,7 +36,7 @@ function Board({ category,
   }
 
   return (
-    <div className="board">
+    <div className="board" onDragEnter={(e) => onDragEnter(e, category.category_id)}>
       <div className="board-inner" key={category?.category_id}>
         <div className="board-header">
           <p className="board-header-title">
@@ -65,7 +63,6 @@ function Board({ category,
               card={item}
               categoryId={category.category_id}
               removeCard={removeCard}
-              onDragEnter={onDragEnter}
               onDragEnd={onDragEnd}
               updateCard={updateCard}
               createCard={createCard}

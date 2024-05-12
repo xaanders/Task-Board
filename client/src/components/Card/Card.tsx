@@ -11,13 +11,12 @@ interface CardProps {
   card: ICard;
   categoryId: number;
   removeCard: (categoryId: number, cardId: number) => void;
-  onDragEnd: (categoryId: number, cardId: number) => void;
-  onDragEnter: (categoryId: number, cardId: number) => void;
+  onDragEnd: (categoryId: number, cardId: number, card: ICard) => void;
   updateCard: (categoryId: number, cardId: number, card: ICard) => void;
   createCard: (categoryId: number, card: ICard) => void;
 }
-function Card({ card, categoryId, removeCard, onDragEnd, onDragEnter, updateCard, createCard }: CardProps) {
-  
+function Card({ card, categoryId, removeCard, onDragEnd, updateCard, createCard }: CardProps) {
+
   const { card_id, title, description, date, tasks, labels } = card;
   const [showDropdown, setShowDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -25,20 +24,23 @@ function Card({ card, categoryId, removeCard, onDragEnd, onDragEnter, updateCard
   return (
     <>
       {showModal && (
-          <CardInfo
-            onClose={() => setShowModal(false)}
-            card={card}
-            categoryId={categoryId}
-            updateCard={updateCard}
-            createCard={createCard}
-            />
+        <CardInfo
+          onClose={() => setShowModal(false)}
+          card={card}
+          categoryId={categoryId}
+          updateCard={updateCard}
+          createCard={createCard}
+        />
       )}
       <div
         className="card"
         key={card.card_id}
         draggable
-        onDragEnd={() => onDragEnd(categoryId, card_id)}
-        onDragEnter={() => onDragEnter(categoryId, card_id)}
+        onDragOver={(e) => {
+          e.dataTransfer.dropEffect = "move";
+          e.preventDefault()
+        }}
+        onDragEnd={() => onDragEnd(categoryId, card_id, card)}
         onClick={() => setShowModal(true)}
       >
         <div className="card-top">

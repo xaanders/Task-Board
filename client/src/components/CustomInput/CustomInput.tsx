@@ -11,17 +11,17 @@ interface CustomInputProps {
   placeholder?: string;
   defaultValue?: string;
   buttonText?: string;
+  textArea?: boolean;
 }
-function CustomInput(props: CustomInputProps) {
-  const {
-    text,
-    onSubmit,
-    displayClass,
-    editClass,
-    placeholder,
-    defaultValue,
-    buttonText,
-  } = props;
+function CustomInput({ text,
+  onSubmit,
+  displayClass,
+  editClass,
+  placeholder,
+  defaultValue,
+  buttonText,
+  textArea }: CustomInputProps) {
+
   const [isCustomInput, setIsCustomInput] = useState(false);
   const [inputText, setInputText] = useState(defaultValue || "");
 
@@ -41,13 +41,26 @@ function CustomInput(props: CustomInputProps) {
           className={`custom-input-edit ${editClass ? editClass : ""}`}
           onSubmit={submission}
         >
-          <input
-            type="text"
-            value={inputText}
-            placeholder={placeholder || text}
-            onChange={(event) => setInputText(event.target.value)}
-            autoFocus
+          {textArea ? 
+          <textarea
+          maxLength={1000}
+          cols={10}
+          autoFocus
+          className="textArea"
+          value={inputText}
+          placeholder={placeholder || text}
+          onChange={(event) => setInputText(event.target.value)}
           />
+          :
+          <input
+          type="text"
+          autoFocus
+          value={inputText}
+          placeholder={placeholder || text}
+          onChange={(event) => setInputText(event.target.value)}
+          />
+        }
+          
           <div className="custom-input-edit-footer">
             <button type="submit">{buttonText || "Add"}</button>
             <X onClick={() => setIsCustomInput(false)} className="closeIcon" />

@@ -24,7 +24,7 @@
   gap: 10px;
 }
 
-.custom-input-edit input {
+.custom-input-edit input, .custom-input-edit textarea {
   border: 2px solid #0079bf;
   border-radius: 5px;
   outline: none;
@@ -60,4 +60,8 @@
   cursor: pointer;
   height: 24px;
   width: 24px;
+}
+
+.textArea {
+  min-height: 100px;
 }
