@@ -69,22 +69,32 @@ function CardInfo({ onClose, card, categoryId, updateCard, createCard }: CardInf
       completed: false,
       text: value,
     };
+
+    if (cardValues.tasks.some(x => x.text === value))
+      return;
+
     setCardValues(prev => ({
       ...prev,
       tasks: [...cardValues.tasks, task],
     }));
   };
 
-  const removeTask = (id?: number) => {
-    if (!id)
+  const removeTask = (id?: number, text?: string) => {
+    if (!id && !text)
       return;
 
-    const tasks = cardValues.tasks.map(x => {
-      if (x.task_id === id)
-        return { ...x, status: 0 }
-      else
-        return x
-    })
+    let tasks = cardValues.tasks;
+
+    if (!id && text) {
+      tasks = tasks.filter(x => x.task_id && x.text !== text)
+    } else {
+      tasks = tasks.map(x => {
+        if (x.task_id === id)
+          return { ...x, status: 0 }
+        else
+          return x
+      })
+    }
 
     setCardValues(prev => ({
       ...prev,
@@ -93,18 +103,14 @@ function CardInfo({ onClose, card, categoryId, updateCard, createCard }: CardInf
 
   };
 
-  const updateTask = (value: boolean, id?: number) => {
-    const tasks = [...cardValues.tasks];
+  const updateTask = (value: boolean, id?: number, text?: string) => {
 
-    const index = tasks.findIndex((item) => item.task_id === id);
-    if (index < 0) return;
+    // if (cardValues.tasks.some((item) => text !== item.text)) return;
 
-    tasks[index].completed = Boolean(value);
-
-    setCardValues(prev => ({
-      ...prev,
-      tasks,
-    }));
+    setCardValues(prev => {
+      const tasks = prev.tasks.map(x => x.text === text ? { ...x, completed: Boolean(value) } : x)
+      return { ...prev, tasks }
+    });
   };
 
   const calculatePercent = () => {
@@ -235,11 +241,11 @@ function CardInfo({ onClose, card, categoryId, updateCard, createCard }: CardInf
                   className={item.status === 0 ? "disabled" : ""}
                   defaultChecked={item.completed}
                   onChange={(event) =>
-                    updateTask(event.target.checked, item.task_id)
+                    updateTask(event.target.checked, item.task_id, item.text)
                   }
                 />
                 <p className={item.completed ? "completed" : ""}>{item.text}</p>
-                <Trash onClick={() => removeTask(item.task_id)} className={item.status === 0 ? "disabled" : ""} />
+                <Trash onClick={() => removeTask(item.task_id, item.text)} className={item.status === 0 ? "disabled" : ""} />
               </div>
             ))}
           </div>

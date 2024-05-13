@@ -1,7 +1,7 @@
 .board {
   min-width: 290px;
   width: 290px;
-  height: 100%;
+  /* height: 100%; */
   overflow-y: auto;
   flex-basis: 290px;
   display: flex;
