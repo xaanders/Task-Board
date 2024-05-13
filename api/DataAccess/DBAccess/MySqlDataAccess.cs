@@ -40,7 +40,7 @@ public class MySqlDataAccess : IMySqlDataAccess
         }
         else
         {
-            return await connection.QueryAsync(query);
+            return await connection.QueryAsync(query, parameters);
         }
     }
 
@@ -75,8 +75,11 @@ public class MySqlDataAccess : IMySqlDataAccess
                 $" WHERE {where.Keys.First()} = {where.GetValueOrDefault(where.Keys.First())}");
         }
 
+        query = query.Replace(":", "@");
 
         Console.WriteLine("QUERY: {0}", query);
+
+        foreach (var kvp in sqlParams) Console.WriteLine($"----------{kvp.Key}: {kvp.Value}");
 
         var res = await ExecuteQuery(query, sqlParams);
 
@@ -154,7 +157,6 @@ public class MySqlDataAccess : IMySqlDataAccess
             await ExecuteQuery(q, updateData);
 
         }
-
 
 
         return new { data, errors };

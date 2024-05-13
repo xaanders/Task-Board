@@ -90,19 +90,14 @@ public class Backend(Environment environment)
     {
         await _u.ReadParams(request);
 
-        string? categoryTemplate = _env.templates["select_board"];
-        string? cardTemplate = _env.templates["select_card"];
-        string? tasksTemplate = _env.templates["select_task"];
-        string? labelsTemplate = _env.templates["select_label"];
-
         try
         {
-            var categoryData = await _u.DB.GetTemplate(categoryTemplate, _u.parameters) as IEnumerable<dynamic?>
+            var categoryData = await _u.DB.GetTemplate(_env.templates["select_board"], _u.parameters) as IEnumerable<dynamic?>
                 ?? throw new Exception("Couldn't get data"); // get categories
 
-            var cardsData = await _u.DB.GetTemplate(cardTemplate, _u.parameters) as IEnumerable<dynamic?>; // get cards
-            var tasksData = await _u.DB.GetTemplate(tasksTemplate, _u.parameters) as IEnumerable<dynamic?>; // get tasks
-            var labelsData = await _u.DB.GetTemplate(labelsTemplate, _u.parameters) as IEnumerable<dynamic?>; // get labels
+            var cardsData = await _u.DB.GetTemplate(_env.templates["select_card"], _u.parameters) as IEnumerable<dynamic?>; // get cards
+            var tasksData = await _u.DB.GetTemplate(_env.templates["select_task"], _u.parameters) as IEnumerable<dynamic?>; // get tasks
+            var labelsData = await _u.DB.GetTemplate(_env.templates["select_label"], _u.parameters) as IEnumerable<dynamic?>; // get labels
 
             var categories = new List<Category>();
             var cards = new List<Card>();
@@ -157,7 +152,7 @@ public class Backend(Environment environment)
             {
                 if (item is not null)
                 {
-                    var c = new Category(item.category_id, item.title, new List<Card?>());
+                    var c = new Category(item.category_id, item.title, item.project_id, new List<Card?>());
 
                     cards.ForEach(x =>
                     {

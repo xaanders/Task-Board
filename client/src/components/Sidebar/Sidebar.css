@@ -1,34 +1,57 @@
 .sidebar {
-    background-color: rgba(255,255,255);
-    padding: 20px;
-    border-right: 2px solid #ccc;
-    min-width: 200px;
-  }
-  
-  .sidebar-heading {
-    margin-top: 0;
-  }
-  
-  .project-list {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .project-item {
-    padding: 5px 0;
-  }
-  
-  .add-button {
-    margin-top: 20px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
-  }
-  
-  .add-button:hover {
-    background-color: #0056b3;
-  }
+  background-color: rgba(255, 255, 255);
+  padding: 20px;
+  border-right: 2px solid #ccc;
+  min-width: 200px;
+}
+
+.sidebar-heading {
+  margin-top: 0;
+}
+
+.project-list {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.project-item {
+  padding-right: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border: 1px solid rgb(190, 190, 190);
+  border-radius: 6px;
+}
+
+.project-item.active {
+  border-color: #007bff;
+  background-color: #efefef;
+}
+.add-button {
+  margin-top: 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.add-button:hover {
+  background-color: #0056b3;
+}
+
+.link {
+  text-decoration: none;
+  padding: 4px;
+  width: 100%;
+}
+
+.link:visited {
+  color: black;
+}

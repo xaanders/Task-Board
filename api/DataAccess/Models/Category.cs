@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Models;
 
-public class Category(int? id, string? title, List<Card?> cards)
+public class Category(int? id, string? title, int? projectId, List<Card?> cards)
 {
     public int? Category_id { get; set; } = id;
     public string? Title { get; set; } = title;
     public List<Card?> Cards { get; set; } = cards;
+
+    public int? Project_id { get; set; } = projectId;
 }

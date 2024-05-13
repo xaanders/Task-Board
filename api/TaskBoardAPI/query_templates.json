@@ -1,5 +1,9 @@
 {
-    "select_board": "SELECT id as category_id, title FROM board where status = 1",
+    "select_project": "SELECT project_id, name as project_name FROM project where status = 1",
+    "insert_project": "INSERT project {{insert_params}}",
+    "update_project": "UPDATE project {{update_params}}",
+
+    "select_board": "SELECT id as category_id, title, project_id FROM board where status = 1 and project_id = :project_id",
     "insert_board": "INSERT board {{insert_params}}",
     "update_board": "UPDATE board {{update_params}}",
 

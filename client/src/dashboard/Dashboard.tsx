@@ -2,32 +2,34 @@ import React, { useCallback, useEffect, useState } from "react";
 import Board from "../components/Board/Board";
 import "./Dashboard.css";
 import CustomInput from "../components/CustomInput/CustomInput";
-import { ICard, IBoard } from "../types/interfaces";
-import { apiCall, dbApiCall, fetchBoardList, updateLocalStorageBoards } from "../helpers/DataAccess";
+import { ICard, IBoard, IProject } from "../types/interfaces";
+import { apiCall, dbApiCall, getAllData} from "../helpers/DataAccess";
 import { useAppContext } from "../store";
 import moment from "moment";
 import Sidebar from "../components/Sidebar";
+
+const params = new URLSearchParams(window.location.search);
+const project_id = params.get('project_id');
 
 function Dashboard() {
   const { showLoading } = useAppContext();
 
   const [categories, setCategories] = useState<IBoard[]>([]);
+  const [projects, setProjects] = useState<IProject[]>([]);
+  async function fetchData() {
 
-  const fetchData = useCallback(async function () {
-    try {
-      const categories: IBoard[] = await fetchBoardList();
-      if (categories.length > 0)
-        setCategories(categories);
-    } catch (error) {
-      setCategories([]);
-    }
-  }, [setCategories])
+    const {categories, projects} = await getAllData();
+    setCategories(categories)
+
+    setProjects(projects)
+  }
 
   useEffect(() => {
     showLoading(true);
     fetchData();
     showLoading(false);
-  }, [showLoading, fetchData]);
+
+  }, [showLoading]);
 
   const [targetCard, setTargetCard] = useState({
     categoryId: 0,
@@ -38,7 +40,7 @@ function Dashboard() {
       return;
 
     showLoading(true)
-    await dbApiCall({ method: 'POST', query: 'insert_board', parameters: { title: name, status: 1 } })
+    await dbApiCall({ method: 'POST', query: 'insert_board', parameters: { title: name, status: 1, project_id: project_id } })
     fetchData()
     showLoading(false)
   };
@@ -254,13 +256,15 @@ function Dashboard() {
     });
   };
 
+  const currentProject = projects.find(x => x.project_id && x.project_id.toString() === project_id);
+
   return (
     <div className="app">
-      <Sidebar projects={[]} />
+      <Sidebar projects={projects} activeProject={currentProject?.project_id} />
       <main className="app-boards-container">
         <header className="app-nav">
           <div className="main-title">
-            <h1>Task Board</h1>
+            <h1 style={{fontSize: '1rem'}}>{currentProject?.project_name}</h1> 
           </div>
         </header>
         <div className="app-boards" onDragOver={(e) => e.preventDefault()}>

@@ -1,86 +1,31 @@
 import { toast } from "react-toastify";
-import { IBoard, IDBCall } from "../types/interfaces";
+import { IApiCall, IBoard, IDBCall, IProject } from "../types/interfaces";
 import { getErrorMessage, settings } from "./helpers";
 
 const LocalStorageKeyName = "kanban-boards";
 //Data Layer
 export class BoardAPI {
-
-  async fetchBoardList(): Promise<IBoard[]> {
-    const apiData = await fetch("http://localhost:5058/api/data");
-
-    if (!apiData.ok)
-      throw new Error("Couldn't get data");
-
-    let boardList: IBoard[] = await apiData.json();
-
-    //first check local storage if local storage is empty then add api mock data as seed
-
-    // if (localStorage.getItem(LocalStorageKeyName)) {
-    //   const localStorageData: IBoard[] = JSON.parse(
-    //     localStorage.getItem(LocalStorageKeyName) ?? "",
-    //   );
-    //   BoardList = [...localStorageData];
-    // } else {
-    //   BoardList = [...apiData];
-    //   updateLocalStorageBoards(BoardList);
-    // }
-    console.log(boardList)
-    return boardList;
-    //TODO:integrate API module when got API from backend team :)
-    /*
-      private readonly api = new Api();//it will have all Restful verbs functions
-      return axios.get(`ENDPOINT_GOES_HERE`)
-      .then((res: { data: any; }) => {
-        return res.data;
-      });
-      */
-  }
-  async dbCall({ path, body, method }: { path: string, body: string, method: string }): Promise<any> {
-    const apiData = await fetch(path, {
+  async dbCall({ path, body, method }: { path: string, body?: string, method: string }): Promise<any> {
+    const reqObj: IApiCall = {
       body: body,
       method: method,
       headers: {
         "content-type": "application/json"
       }
-    });
+    }
+
+    if (method === "GET") {
+      delete reqObj.body
+      delete reqObj.headers
+    }
+
+    const apiData = await fetch(path, reqObj);
 
     return await apiData.json();
   }
-  async addBoard(title: string): Promise<unknown> {
-    const apiData = await fetch("http://localhost:5058/api/universal?t=insert_board", {
-      body: JSON.stringify({ title }),
-      method: "POST",
-      headers: {
-        "content-type": "application/json"
-      }
-    });
-
-    return await apiData.json();
-  }
-} //BoardAPI Class End
-
-//Business Layer
-export async function fetchBoardList(): Promise<IBoard[]> {
-  const api = new BoardAPI();
-  console.log("fetch boards")
-
-  return api.fetchBoardList();
 }
 
-export async function dbInsert(title: string) {
-  const api = new BoardAPI();
-
-  return api.addBoard(title);
-
-}
-
-export function updateLocalStorageBoards(boards: IBoard[]) {
-  console.log("gets updated")
-  localStorage.setItem(LocalStorageKeyName, JSON.stringify(boards));
-}
-
-export async function dbApiCall({ method = 'POST', query, parameters }: IDBCall) {
+export async function dbApiCall({ method = 'POST', query, parameters = {} }: IDBCall) {
   const api = new BoardAPI();
 
   let path = settings.API + `universal?t=${query}`;
@@ -114,17 +59,54 @@ export async function dbApiCall({ method = 'POST', query, parameters }: IDBCall)
 export async function apiCall({ method, parameters }: IDBCall) {
   const api = new BoardAPI();
 
-  let path = settings.API + `universal`;
+  const apiGate = parameters?.apiGate || "universal"
+
+  let path = settings.API + apiGate;
+
+  if(parameters?.apiGate)
+    delete parameters.apiGate
+
   try {
 
-    const res: {Error: string, errors: string[], data: number[]} = await api.dbCall({ path, body: JSON.stringify(parameters), method })
+    if (method === 'GET' && parameters && Object.keys(parameters).length > 0) {
 
-    if (res["Error"]) {
+      Object.keys(parameters).forEach((key, i) => {
+        if(i === 0)
+          path += `?${key}=${parameters[key]}`
+        else 
+          path += `&${key}=${parameters[key]}`
+      })
+
+    }
+
+    const res = await api.dbCall({ path, body: JSON.stringify(parameters), method })
+
+    if (res['Error']) {
       throw new Error(res['Error'] || "Unknown error");
     }
+
     return res;
 
   } catch (error) {
     toast(getErrorMessage(error), { type: 'error' });
   }
+}
+
+export const getAllData = async (projectId?: number) => {
+  let projects: IProject[] = await dbApiCall({
+    method: "GET", query: 'select_project'
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  const project_id = params.get('project_id');
+
+  let categories = await apiCall({ method: "GET", parameters: { apiGate: 'data', project_id: projectId || project_id || projects[0].project_id } });
+
+  if (!projects?.length)
+    projects = [];
+
+  if (!categories?.length)
+    categories = [];
+
+  return { projects, categories }
 }
