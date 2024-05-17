@@ -92,7 +92,7 @@ public class Backend(Environment environment)
 
         try
         {
-            var categoryData = await _u.DB.GetTemplate(_env.templates["select_board"], _u.parameters) as IEnumerable<dynamic?>
+            var categoryData = await _u.DB.GetTemplate(_env.templates["select_category"], _u.parameters) as IEnumerable<dynamic?>
                 ?? throw new Exception("Couldn't get data"); // get categories
 
             var cardsData = await _u.DB.GetTemplate(_env.templates["select_card"], _u.parameters) as IEnumerable<dynamic?>; // get cards
@@ -152,7 +152,7 @@ public class Backend(Environment environment)
             {
                 if (item is not null)
                 {
-                    var c = new Category(item.category_id, item.title, item.project_id, new List<Card?>());
+                    var c = new Category(item.category_id, item.title, item.board_id, new List<Card?>());
 
                     cards.ForEach(x =>
                     {

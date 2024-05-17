@@ -1,35 +1,37 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, Suspense, useEffect, useState } from "react";
+
 import Board from "../components/Board/Board";
 import "./Dashboard.css";
 import CustomInput from "../components/CustomInput/CustomInput";
-import { ICard, IBoard, IProject } from "../types/interfaces";
-import { apiCall, dbApiCall, getAllData} from "../helpers/DataAccess";
+import { ICard, ICategory, IBoard } from "../types/interfaces";
+import { apiCall, dbApiCall } from "../helpers/DataAccess";
 import { useAppContext } from "../store";
 import moment from "moment";
-import Sidebar from "../components/Sidebar";
+interface DashboardProps {
+  activeBoardId: number | null;
+  activeBoardName: string | null
+}
 
-const params = new URLSearchParams(window.location.search);
-const project_id = params.get('project_id');
+async function fetchData(activeBoardId: number | null, setCategories: Dispatch<SetStateAction<ICategory[]>>) {
+  if (!activeBoardId)
+    return;
+  let categories = await apiCall({ method: "GET", parameters: { apiGate: 'data', board_id: activeBoardId } });
+  setCategories(categories)
+}
 
-function Dashboard() {
+function Dashboard({ activeBoardId, activeBoardName }: DashboardProps) {
+
   const { showLoading } = useAppContext();
 
-  const [categories, setCategories] = useState<IBoard[]>([]);
-  const [projects, setProjects] = useState<IProject[]>([]);
-  async function fetchData() {
-
-    const {categories, projects} = await getAllData();
-    setCategories(categories)
-
-    setProjects(projects)
-  }
+  const [categories, setCategories] = useState<ICategory[]>([]);
 
   useEffect(() => {
-    showLoading(true);
-    fetchData();
-    showLoading(false);
-
-  }, [showLoading]);
+    if(categories.length === 0){
+      showLoading(true);
+      fetchData(activeBoardId, setCategories);
+      showLoading(false);
+    }
+  }, [setCategories, activeBoardId, showLoading, categories.length]);
 
   const [targetCard, setTargetCard] = useState({
     categoryId: 0,
@@ -40,18 +42,18 @@ function Dashboard() {
       return;
 
     showLoading(true)
-    await dbApiCall({ method: 'POST', query: 'insert_board', parameters: { title: name, status: 1, project_id: project_id } })
-    fetchData()
+    await dbApiCall({ method: 'POST', query: 'insert_category', parameters: { title: name, status: 1, board_id: activeBoardId } })
+    fetchData(activeBoardId, setCategories);
     showLoading(false)
   };
 
   const removeBoard = async (boardId: number) => {
 
-    const categoryIndex = categories.findIndex((item: IBoard) => item.category_id === boardId);
+    const categoryIndex = categories.findIndex((item: ICategory) => item.category_id === boardId);
     if (categoryIndex < 0) return;
 
     const tempBoardsList = [...categories];
-    const res = await dbApiCall({ method: 'PUT', query: 'update_board', parameters: { status: 0, where: { id: boardId } } });
+    const res = await dbApiCall({ method: 'PUT', query: 'update_category', parameters: { status: 0, where: { id: boardId } } });
 
     if (!res) return;
 
@@ -60,7 +62,7 @@ function Dashboard() {
   };
 
   const addCardHandler = async (categoryId: number, title: string) => {
-    const categoryIndex = categories.findIndex((item: IBoard) => item.category_id === categoryId);
+    const categoryIndex = categories.findIndex((item: ICategory) => item.category_id === categoryId);
     if (categoryIndex < 0) return;
 
     console.log(moment().utc().format("YYYY-MM-DD HH:MM:ss"))
@@ -76,12 +78,12 @@ function Dashboard() {
         status: 1
       }
     })
-    fetchData();
+    fetchData(activeBoardId, setCategories);
     showLoading(false);
   };
 
   const removeCard = async (boardId: number, cardId: number) => {
-    const boardIndex = categories.findIndex((item: IBoard) => item.category_id === boardId);
+    const boardIndex = categories.findIndex((item: ICategory) => item.category_id === boardId);
     if (boardIndex < 0) return;
     showLoading(true);
     await dbApiCall({
@@ -92,7 +94,7 @@ function Dashboard() {
         }
       }
     })
-    fetchData();
+    fetchData(activeBoardId, setCategories);
     showLoading(false);
   };
 
@@ -162,7 +164,7 @@ function Dashboard() {
         }
       })
 
-    fetchData();
+    fetchData(activeBoardId, setCategories);
     showLoading(false);
   };
 
@@ -207,13 +209,13 @@ function Dashboard() {
         }
       })
 
-    fetchData();
+    fetchData(activeBoardId, setCategories);
     showLoading(false);
 
   }
   const onDragEnd = async (categoryId: number, cardId: number, card: ICard) => {
     // const sourceBoardIndex = categories.findIndex(
-    //   (item: IBoard) => item.category_id === categoryId,
+    //   (item: ICategory) => item.category_id === categoryId,
     // );
     // if (sourceBoardIndex < 0) return;
 
@@ -223,7 +225,7 @@ function Dashboard() {
     // if (sourceCardIndex < 0) return;
 
     // const targetBoardIndex = categories.findIndex(
-    //   (item: IBoard) => item.category_id === targetCard.categoryId,
+    //   (item: ICategory) => item.category_id === targetCard.categoryId,
     // );
     // if (targetBoardIndex < 0) return;
 
@@ -239,7 +241,7 @@ function Dashboard() {
     card.category_id = targetCard.categoryId;
 
     await updateCard(targetCard.categoryId, cardId, card);
-    await fetchData();
+    await fetchData(activeBoardId, setCategories);
 
     setTargetCard({
       categoryId: 0,
@@ -255,18 +257,13 @@ function Dashboard() {
       categoryId: categoryId,
     });
   };
-
-  const currentProject = projects.find(x => x.project_id && x.project_id.toString() === project_id);
-
   return (
-    <div className="app">
-      <Sidebar projects={projects} activeProject={currentProject?.project_id} />
-      <main className="app-boards-container">
-        <header className="app-nav">
-          <div className="main-title">
-            <h1 style={{fontSize: '1rem'}}>{currentProject?.project_name}</h1> 
-          </div>
-        </header>
+    <main className="app-boards-container">
+      <header className="app-nav">
+        <div className="main-title">
+          <h1 style={{ fontSize: '1.5rem' }}>{activeBoardName}</h1>
+        </div>
+      </header>
         <div className="app-boards" onDragOver={(e) => e.preventDefault()}>
           {categories.map((item) => (
             <Board
@@ -286,14 +283,13 @@ function Dashboard() {
               displayClass="app-boards-add-board"
               editClass="app-boards-add-board-edit"
               placeholder="Enter Board Name"
-              text="Add Board"
-              buttonText="Add Board"
+              text="Add Category"
+              buttonText="Add Category"
               onSubmit={addBoardHandler}
             />
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }
 export default Dashboard;

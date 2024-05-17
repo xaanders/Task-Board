@@ -3,9 +3,13 @@
     "insert_project": "INSERT project {{insert_params}}",
     "update_project": "UPDATE project {{update_params}}",
 
-    "select_board": "SELECT id as category_id, title, project_id FROM board where status = 1 and project_id = :project_id",
+    "select_board": "SELECT board_id, name as board_name FROM board where project_id = :project_id and status = 1",
     "insert_board": "INSERT board {{insert_params}}",
     "update_board": "UPDATE board {{update_params}}",
+
+    "select_category": "SELECT id as category_id, title, board_id FROM category where board_id = :board_id and status = 1",
+    "insert_category": "INSERT category {{insert_params}}",
+    "update_category": "UPDATE category {{update_params}}",
 
     "select_card": "SELECT id as card_id, description, title, category_id, date FROM card where status = 1",
     "insert_card": "INSERT card {{insert_params}}",

@@ -25,16 +25,20 @@ export interface ICard {
   category_id?: number;
 }
 
-export interface IBoard {
+export interface ICategory {
   category_id: number;
   title: string;
   cards: ICard[];
-  project_id: number;
+  board_id: number;
 }
+export interface IBoard {
+  board_id: number;
+  board_name: string;
+}
+
 export interface IProject {
   project_id?: number;
   project_name: string;
-  current?: boolean
 }
 export interface IDBCall {
   method: string,

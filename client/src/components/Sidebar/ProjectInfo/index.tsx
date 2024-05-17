@@ -2,17 +2,19 @@ import React, { useState } from 'react'
 import Modal from '../../modal/Modal';
 import { List, Type } from 'react-feather';
 import CustomInput from '../../CustomInput/CustomInput';
-import { dbApiCall, getAllData } from '../../../helpers/DataAccess';
+import { dbApiCall } from '../../../helpers/DataAccess';
 import moment from 'moment';
 import { IProject } from '../../../types/interfaces';
 
 interface Props {
     onClose: () => void;
-    editProject: IProject
+    editProject: IProject;
+    activeProjectId: number | null;
+
 }
 
 
-const ProjectInfo = ({ onClose, editProject }: Props) => {
+function ProjectInfo({ onClose, editProject, activeProjectId }: Props) {
 
     const [newProject, setNewProject] = useState(editProject);
 
@@ -23,18 +25,31 @@ const ProjectInfo = ({ onClose, editProject }: Props) => {
     const saveNewProject = async (e: any) => {
         e.preventDefault();
 
-        const res = await dbApiCall({
+        await dbApiCall({
             method: "POST", query: 'insert_project', parameters: {
                 ...newProject,
                 status: 1
             }
         })
-        await getAllData(res[0].lastInsertId);
-
         onClose();
     }
 
-    const updateProject = async (e: any) => {}
+    const updateProject = async (e: any) => {
+        e.preventDefault();
+        const id = newProject.project_id;
+        if (!id)
+            return;
+
+        await dbApiCall({
+            method: "POST", query: 'update_project', parameters: {
+                name: newProject.project_name,
+                where: { project_id: id }
+            }
+        })
+
+
+        onClose();
+    }
 
     return (
         <Modal onClose={onClose}>
@@ -48,7 +63,7 @@ const ProjectInfo = ({ onClose, editProject }: Props) => {
                         defaultValue={newProject.project_name}
                         text={newProject.project_name || "Add a Title"}
                         placeholder="Enter Title"
-                        onSubmit={(v) => updateData(v, 'name')}
+                        onSubmit={(v) => updateData(v, 'project_name')}
                     />
                 </div>
                 <div className="actions">

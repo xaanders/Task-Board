@@ -6,10 +6,10 @@ import Dropdown from "../Dropdown/Dropdown";
 import CustomInput from "../CustomInput/CustomInput";
 
 import "./Board.css";
-import { IBoard, ICard } from "../../types/interfaces";
+import { ICategory, ICard } from "../../types/interfaces";
 import CardInfo from "../Card/CardInfo/CardInfo";
 interface BoardProps {
-  category: IBoard;
+  category: ICategory;
   addCard: (categoryId: number, title: string) => void;
   removeBoard: (categoryId: number) => void;
   removeCard: (categoryId: number, cardId: number) => void;
@@ -41,7 +41,7 @@ function Board({ category,
         <div className="board-header">
           <p className="board-header-title">
             {category?.title}
-            <span>{category?.cards?.length || 0}</span>
+            <span>{`${category?.cards?.length} cards`|| "0 cards"}</span>
           </p>
           <div
             className="board-header-title-more"

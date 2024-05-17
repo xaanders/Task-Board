@@ -1,9 +1,7 @@
 import { toast } from "react-toastify";
-import { IApiCall, IBoard, IDBCall, IProject } from "../types/interfaces";
+import { IApiCall, IDBCall, IBoard } from "../types/interfaces";
 import { getErrorMessage, settings } from "./helpers";
 
-const LocalStorageKeyName = "kanban-boards";
-//Data Layer
 export class BoardAPI {
   async dbCall({ path, body, method }: { path: string, body?: string, method: string }): Promise<any> {
     const reqObj: IApiCall = {
@@ -92,21 +90,3 @@ export async function apiCall({ method, parameters }: IDBCall) {
   }
 }
 
-export const getAllData = async (projectId?: number) => {
-  let projects: IProject[] = await dbApiCall({
-    method: "GET", query: 'select_project'
-  });
-
-  const params = new URLSearchParams(window.location.search);
-  const project_id = params.get('project_id');
-
-  let categories = await apiCall({ method: "GET", parameters: { apiGate: 'data', project_id: projectId || project_id || projects[0].project_id } });
-
-  if (!projects?.length)
-    projects = [];
-
-  if (!categories?.length)
-    categories = [];
-
-  return { projects, categories }
-}
