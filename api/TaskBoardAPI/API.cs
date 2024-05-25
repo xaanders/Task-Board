@@ -12,12 +12,12 @@ public static class API
             await next(context);
         });
 
-        app.MapGet("/api/universal", async (HttpRequest request, Backend backend) => await backend.Universal(request));
+        app.MapGet("/api/universal", async (HttpRequest request, Backend backend) => await backend.Universal(request)).RequireAuthorization();
 
-        app.MapPost("/api/universal", async (HttpRequest request, Backend backend) => await backend.Universal(request));
+        app.MapPost("/api/universal", async (HttpRequest request, Backend backend) => await backend.Universal(request)).RequireAuthorization();
         
-        app.MapPut("/api/universal", async (HttpRequest request, Backend backend) => await backend.Universal(request));
+        app.MapPut("/api/universal", async (HttpRequest request, Backend backend) => await backend.Universal(request)).RequireAuthorization();
 
-        app.MapGet("/api/data", async (HttpRequest request, Backend backend) => await backend.GetAll(request));
+        app.MapGet("/api/data", async (HttpRequest request, Backend backend) => await backend.GetAll(request)).RequireAuthorization();
     }
 }

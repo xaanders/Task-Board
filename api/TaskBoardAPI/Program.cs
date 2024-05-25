@@ -1,10 +1,18 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using TaskBoardAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// Add services to the container
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
+builder.Services.AddAuthorization();
+
+// Configure JWT Bearer authentication
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer();
+
+builder.Services.ConfigureOptions<JwtBearerConfigureOptions>();
 
 var environment = new TaskBoardAPI.Environment();
 await environment.ReadTemplates();
@@ -24,12 +32,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline
+app.UseCors("AllowSpecificOrigin");
 
-app.UseCors("AllowSpecificOrigin"); ;
+// Add authentication and authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.UseHttpsRedirection();
-
+// Configure API endpoints
 app.ConfigureApi();
 
 app.Run();
-
