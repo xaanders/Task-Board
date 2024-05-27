@@ -22,8 +22,16 @@ public static class API
 
         app.MapGet("/api/data", async (HttpRequest request, Backend backend) => await backend.GetAll(request)).RequireAuthorization();
 
-        app.MapPost("/api/register", async (HttpRequest request, IAmazonCognitoIdentityProvider cognitoClient, Auth auth) => await auth.InitiateSignUp(request, cognitoClient));
-        
-        //app.MapPost("/api/login", async (HttpRequest request, Backend backend) => await backend.GetAll(request)).RequireAuthorization();
+        app.MapPost("/api/register", async (HttpRequest request, IAmazonCognitoIdentityProvider cognitoClient, Auth auth) => 
+            await auth.AuthUniversal(request, cognitoClient, "SignUp"));
+
+        app.MapPost("/api/confirm-email", async (HttpRequest request, IAmazonCognitoIdentityProvider cognitoClient, Auth auth) =>
+            await auth.AuthUniversal(request, cognitoClient, "ConfirmEmail"));
+
+        app.MapPost("/api/resend-code", async (HttpRequest request, IAmazonCognitoIdentityProvider cognitoClient, Auth auth) =>
+            await auth.AuthUniversal(request, cognitoClient, "ResendCode"));
+
+        app.MapPost("/api/signin", async (HttpRequest request, IAmazonCognitoIdentityProvider cognitoClient, Auth auth) => 
+            await auth.AuthUniversal(request, cognitoClient, "SignIn"));
     }
 }
