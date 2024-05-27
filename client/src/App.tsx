@@ -33,20 +33,21 @@ function App() {
   const [projects, setProjects] = useState<IProject[]>([]);
 
   const fetchBoards = useCallback(async () => {
-    if (!activeProjectId)
+    if (!activeProjectId || !projects.length)
       return
-
+    console.log(projects)
     let boards: IBoard[] = await dbApiCall({
       method: "GET", query: 'select_board', parameters: { project_id: activeProjectId }
     });
-    setBoards(boards)
-  }, [activeProjectId])
+    setBoards(boards || [])
+  }, [activeProjectId, projects])
 
   async function fetchProjects() {
     let projects: IProject[] = await dbApiCall({
       method: "GET", query: 'select_project'
     });
-    setProjects(projects)
+    if(projects && projects.length)
+      setProjects(projects)
   }
 
   useEffect(() => {
@@ -77,7 +78,7 @@ function App() {
         projects={projects}
       />
       {activeProjectId && !activeBoardId && <NoBoard />}
-      {activeProjectId && activeBoardId && <Dashboard activeBoardId={activeBoardId} activeBoardName={activeBoardName} />}
+      {activeProjectId && activeBoardId && <Dashboard activeBoardId={activeBoardId} activeBoardName={activeBoardName} isProject={!!projects.length && !!activeBoardId}/>}
 
       <ToastContainer
         position="top-right"

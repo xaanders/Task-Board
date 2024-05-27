@@ -1,4 +1,6 @@
-﻿namespace TaskBoardAPI;
+﻿using Amazon.CognitoIdentityProvider;
+
+namespace TaskBoardAPI;
 
 public static class API
 {
@@ -19,5 +21,9 @@ public static class API
         app.MapPut("/api/universal", async (HttpRequest request, Backend backend) => await backend.Universal(request)).RequireAuthorization();
 
         app.MapGet("/api/data", async (HttpRequest request, Backend backend) => await backend.GetAll(request)).RequireAuthorization();
+
+        app.MapPost("/api/register", async (HttpRequest request, IAmazonCognitoIdentityProvider cognitoClient, Auth auth) => await auth.InitiateSignUp(request, cognitoClient));
+        
+        //app.MapPost("/api/login", async (HttpRequest request, Backend backend) => await backend.GetAll(request)).RequireAuthorization();
     }
 }

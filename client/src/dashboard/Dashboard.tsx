@@ -9,7 +9,8 @@ import { useAppContext } from "../store";
 import moment from "moment";
 interface DashboardProps {
   activeBoardId: number | null;
-  activeBoardName: string | null
+  activeBoardName: string | null;
+  isProject: boolean;
 }
 
 async function fetchData(activeBoardId: number | null, setCategories: Dispatch<SetStateAction<ICategory[]>>) {
@@ -19,19 +20,18 @@ async function fetchData(activeBoardId: number | null, setCategories: Dispatch<S
   setCategories(categories)
 }
 
-function Dashboard({ activeBoardId, activeBoardName }: DashboardProps) {
+function Dashboard({ activeBoardId, activeBoardName, isProject }: DashboardProps) {
 
   const { showLoading } = useAppContext();
 
   const [categories, setCategories] = useState<ICategory[]>([]);
-
   useEffect(() => {
-    if(categories.length === 0){
+    if(categories.length === 0 && isProject){
       showLoading(true);
       fetchData(activeBoardId, setCategories);
       showLoading(false);
     }
-  }, [setCategories, activeBoardId, showLoading, categories.length]);
+  }, [setCategories, activeBoardId, showLoading, categories.length, isProject]);
 
   const [targetCard, setTargetCard] = useState({
     categoryId: 0,

@@ -1,5 +1,7 @@
 ﻿using DataAccess.DBAccess;
 using Newtonsoft.Json;
+using System.Security.Cryptography;
+using System.Text;
 
 
 namespace TaskBoardAPI;
@@ -66,5 +68,18 @@ public class Utils(Environment environment)
     {
         return GetParamObj(name, required)?.ToString();
     }
+    internal string CalculateSecretHash(string username, string? clientId, string? clientSecret)
+    {
+        if (clientId is null || clientSecret is null)
+            return "";
 
+        var message = Encoding.UTF8.GetBytes(username + clientId);
+        var key = Encoding.UTF8.GetBytes(clientSecret);
+
+        using (var hmac = new HMACSHA256(key))
+        {
+            var hash = hmac.ComputeHash(message);
+            return Convert.ToBase64String(hash);
+        }
+    }
 }

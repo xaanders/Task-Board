@@ -79,7 +79,6 @@ public class MySqlDataAccess : IMySqlDataAccess
 
         Console.WriteLine("QUERY: {0}", query);
 
-        foreach (var kvp in sqlParams) Console.WriteLine($"----------{kvp.Key}: {kvp.Value}");
 
         var res = await ExecuteQuery(query, sqlParams);
 
