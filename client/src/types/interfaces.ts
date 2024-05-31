@@ -52,3 +52,8 @@ export interface IApiCall {
   method: string;
   body?: string;
 }
+
+export interface IUserLogin {
+  email: string;
+  password: string;
+}

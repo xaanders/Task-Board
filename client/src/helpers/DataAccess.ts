@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { IApiCall, IDBCall, IBoard } from "../types/interfaces";
+import { IApiCall, IDBCall } from "../types/interfaces";
 import { getErrorMessage, settings } from "./helpers";
 
 export class BoardAPI {

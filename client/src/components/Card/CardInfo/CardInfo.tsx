@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Calendar, CheckSquare, List, Tag, Trash, Type, X } from "react-feather";
+import React, { useState } from "react";
+import { Calendar, CheckSquare, List, Tag, Trash, Type } from "react-feather";
 import { colorsList } from "../../../helpers/helpers";
 import Modal from "../../modal/Modal";
 import CustomInput from "../../CustomInput/CustomInput";

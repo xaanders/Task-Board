@@ -1,4 +1,4 @@
-import './Dashboard.css'
+import './Board.css'
 
 function NoBoard() {
 return (

@@ -1,5 +1,4 @@
 import { createContext, useContext, useState } from "react";
-import { Props } from "../types/types";
 
 interface IAppContext {
     showLoading: (state: boolean) => void;

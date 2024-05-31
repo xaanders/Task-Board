@@ -1,66 +1,48 @@
-.board {
-  min-width: 290px;
-  width: 290px;
-  /* height: 100%; */
-  overflow-y: auto;
+body {
+}
+.app {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+}
+
+.app-nav {
+  box-shadow: 0 1px 20px rgba(56, 40, 40, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  top: 0;
+  box-shadow: none;
+  color: #000;
+  display: inline-block;
+  font-size: 15px;
+  line-height: 36px;
+  width: 100%;
+  background: #fff;
+}
+
+.main-title {
+  padding: 10px;
+}
+
+.app-boards-container {
+  /* width: 100%; */
+  min-height: 100%;
+  background: #eeeded;
+}
+
+.app-boards {
+  width: fit-content;
+  padding: 0px 30px;
+  display: inline-flex;
+  gap: 30px;
+  padding-top: 20px;
+}
+
+.app-boards-last {
   flex-basis: 290px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  color: #17394d;
-}
-.board-inner{
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 3px;
-}
-.board-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 5px;
+  min-width: 290px;
 }
 
-.board-header-title {
-  font-weight: bold;
-  font-size: 1rem;
-  display: flex;
-  gap: 5px;
-  align-items: center;
-}
-
-.board-header-title span {
-  color: rgb(145, 145, 145);
-}
-
-.board-header-title-more {
-  cursor: pointer;
-  position: relative;
-}
-
-.board-dropdown {
-  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-  padding: 10px;
-  width: 150px !important;
-  cursor: default;
-}
-.board-dropdown p {
-  border-bottom: 1px solid #f8f8f8;
-  cursor: pointer;
-}
-
-.board-cards {
-  background-color: #f8f8f8;
-  padding: 10px;
-  border-radius: 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.board-add-card {
+.app-boards-add-board {
   background-color: #fff;
   color: #000;
   border-radius: 10px;
@@ -68,12 +50,43 @@
   width: 100%;
   text-align: center;
 }
-.board-add-card-edit {
+.app-boards-add-board-edit {
   background-color: #fff;
   border-radius: 10px;
   padding: 10px;
 }
+/*
+   * scroll bar styling
+   */
+*::-webkit-scrollbar {
+  width: 12px;
+}
 
-.custom-scroll {
-  padding-top: 10px;
+/* Track */
+*::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+*::-webkit-scrollbar-thumb {
+  background: #c4c4c4;
+}
+
+/* Handle on hover */
+*::-webkit-scrollbar-thumb:hover {
+  background: rgb(217 215 215);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 6px rgba(179, 174, 174, 0.5);
+}
+
+
+.no-board {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

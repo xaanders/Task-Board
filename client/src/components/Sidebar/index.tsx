@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import './Sidebar.css'
 import BoardInfo from './BoardInfo';
 import { IBoard, IProject } from '../../types/interfaces';
 import { Edit } from 'react-feather';
-import { dbApiCall } from '../../helpers/DataAccess';
 import ProjectInfo from './ProjectInfo';
 
 interface SidebarProps {

@@ -1,101 +1,295 @@
-import React, { useState } from "react";
-import { MoreHorizontal } from "react-feather";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 
-import Card from "../Card/Card";
-import Dropdown from "../Dropdown/Dropdown";
-import CustomInput from "../CustomInput/CustomInput";
-
+import Category from "../Category/Category";
 import "./Board.css";
-import { ICategory, ICard } from "../../types/interfaces";
-import CardInfo from "../Card/CardInfo/CardInfo";
+import CustomInput from "../CustomInput/CustomInput";
+import { ICard, ICategory } from "../../types/interfaces";
+import { apiCall, dbApiCall } from "../../helpers/DataAccess";
+import { useAppContext } from "../../store";
+import moment from "moment";
 interface BoardProps {
-  category: ICategory;
-  addCard: (categoryId: number, title: string) => void;
-  removeBoard: (categoryId: number) => void;
-  removeCard: (categoryId: number, cardId: number) => void;
-  onDragEnd: (categoryId: number, cardId: number, card: ICard) => void;
-  onDragEnter: (e: any, categoryId: number) => void;
-  updateCard: (categoryId: number, cardId: number, card: ICard) => void;
-  createCard: (categoryId: number, card: ICard) => void;
+  activeBoardId: number | null;
+  activeBoardName: string | null;
+  isProject: boolean;
 }
 
-function Board({ category,
-  removeBoard,
-  removeCard,
-  onDragEnd,
-  onDragEnter,
-  updateCard,
-  createCard }: BoardProps) {
+async function fetchData(activeBoardId: number | null, setCategories: Dispatch<SetStateAction<ICategory[]>>) {
+  if (!activeBoardId)
+    return;
+  let categories = await apiCall({ method: "GET", parameters: { apiGate: 'data', board_id: activeBoardId } });
+  setCategories(categories)
+}
 
-  const [showAddCardModal, setShowAddCardModal] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
+function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
 
-  async function onClose(id: number) {
-    setShowDropdown(prev => !prev);
-    removeBoard(id);
+  const { showLoading } = useAppContext();
+
+  const [categories, setCategories] = useState<ICategory[]>([]);
+  useEffect(() => {
+    if(categories.length === 0 && isProject){
+      showLoading(true);
+      fetchData(activeBoardId, setCategories);
+      showLoading(false);
+    }
+  }, [setCategories, activeBoardId, showLoading, categories.length, isProject]);
+
+  const [targetCard, setTargetCard] = useState({
+    categoryId: 0,
+  });
+
+  const addBoardHandler = async (name: string) => {
+    if (!name)
+      return;
+
+    showLoading(true)
+    await dbApiCall({ method: 'POST', query: 'insert_category', parameters: { title: name, status: 1, board_id: activeBoardId } })
+    fetchData(activeBoardId, setCategories);
+    showLoading(false)
+  };
+
+  const removeCategory = async (boardId: number) => {
+
+    const categoryIndex = categories.findIndex((item: ICategory) => item.category_id === boardId);
+    if (categoryIndex < 0) return;
+
+    const tempBoardsList = [...categories];
+    const res = await dbApiCall({ method: 'PUT', query: 'update_category', parameters: { status: 0, where: { id: boardId } } });
+
+    if (!res) return;
+
+    tempBoardsList.splice(categoryIndex, 1);
+    setCategories(tempBoardsList);
+  };
+
+  const addCardHandler = async (categoryId: number, title: string) => {
+    const categoryIndex = categories.findIndex((item: ICategory) => item.category_id === categoryId);
+    if (categoryIndex < 0) return;
+
+    console.log(moment().utc().format("YYYY-MM-DD HH:MM:ss"))
+
+    showLoading(true);
+
+    await dbApiCall({
+      method: "POST", query: 'insert_card', parameters: {
+        title,
+        date: moment().utc().format("YYYY-MM-DD HH:MM:ss"),
+        description: "",
+        category_id: categoryId,
+        status: 1
+      }
+    })
+    fetchData(activeBoardId, setCategories);
+    showLoading(false);
+  };
+
+  const removeCard = async (boardId: number, cardId: number) => {
+    const boardIndex = categories.findIndex((item: ICategory) => item.category_id === boardId);
+    if (boardIndex < 0) return;
+    showLoading(true);
+    await dbApiCall({
+      method: "PUT", query: 'update_card', parameters: {
+        status: 0,
+        where: {
+          id: cardId,
+        }
+      }
+    })
+    fetchData(activeBoardId, setCategories);
+    showLoading(false);
+  };
+
+  const updateCard = async (categoryId: number, cardId: number, card: ICard) => {
+    const boardIndex = categories.findIndex((item) => item.category_id === categoryId);
+    if (boardIndex < 0) return;
+    console.log('card to update', card)
+
+    showLoading(true);
+
+    await dbApiCall({ // update card data
+      method: "PUT", query: 'update_card', parameters: {
+        title: card.title,
+        date: card.date,
+        description: card.description,
+        category_id: categoryId,
+        where: {
+          id: cardId
+        }
+      }
+    })
+
+    const newLabels = card.labels.filter(x => !x.label_id && !x.card_id);
+    const newTasks = card.tasks.filter(x => !x.task_id && !x.card_id);
+
+    const oldLabels = card.labels.filter(x => x.label_id && x.card_id);
+    const oldTasks = card.tasks.filter(x => x.task_id && x.card_id);
+
+    if (newLabels.length > 0)
+      await apiCall({ // insert new labels
+        method: "POST",
+        parameters: {
+          table: "label",
+          insertArray: newLabels,
+          insertStatic: { status: 1, card_id: cardId },
+          returnInsertedId: false
+        }
+      })
+
+
+    if (oldLabels.length > 0)
+      await apiCall({ // update old tasks
+        method: "PUT",
+        parameters: {
+          table: "label",
+          updateArray: oldLabels.map(x => ({ color: x.color, text: x.text, status: x.status === 0 ? 0 : 1, where: { id: x.label_id } }))
+        }
+      })
+
+    if (newTasks.length > 0)
+      await apiCall({ // insert its tasks
+        method: "POST",
+        parameters: {
+          table: "task",
+          insertArray: newTasks,
+          insertStatic: { status: 1, card_id: cardId },
+          returnInsertedId: false
+        }
+      })
+
+    if (oldTasks.length > 0)
+      await apiCall({ // update old tasks
+        method: "PUT",
+        parameters: {
+          table: "task",
+          updateArray: oldTasks.map(x => ({ completed: x.completed, text: x.text, status: x.status === 0 ? 0 : 1, where: { id: x.task_id } }))
+        }
+      })
+
+    fetchData(activeBoardId, setCategories);
+    showLoading(false);
+  };
+
+  const createCard = async (categoryId: number, card: ICard) => {
+    const boardIndex = categories.findIndex((item) => item.category_id === categoryId);
+    if (boardIndex < 0) return;
+    console.log('card to update', card)
+
+    showLoading(true);
+
+    const res = await dbApiCall({ // insert card data
+      method: "POST", query: 'insert_card', parameters: {
+        title: card.title,
+        date: card.date || null,
+        description: card.description || null,
+        category_id: categoryId,
+        status: 1,
+      }
+    })
+
+    const id = res[0].lastInsertId;
+
+    if (card.labels.length > 0 && id)
+      await apiCall({ // insert its labels
+        method: "POST",
+        parameters: {
+          table: "label",
+          insertArray: card.labels,
+          insertStatic: { status: 1, card_id: id },
+          returnInsertedId: false
+        }
+      })
+
+    if (card.tasks.length > 0 && id)
+      await apiCall({ // insert its tasks
+        method: "POST",
+        parameters: {
+          table: "task",
+          insertArray: card.tasks,
+          insertStatic: { status: 1, card_id: id },
+          returnInsertedId: false
+        }
+      })
+
+    fetchData(activeBoardId, setCategories);
+    showLoading(false);
+
   }
+  const onDragEnd = async (categoryId: number, cardId: number, card: ICard) => {
+    // const sourceBoardIndex = categories.findIndex(
+    //   (item: ICategory) => item.category_id === categoryId,
+    // );
+    // if (sourceBoardIndex < 0) return;
 
+    // const sourceCardIndex = categories[sourceBoardIndex]?.cards?.findIndex(
+    //   (item) => item.card_id === cardId,
+    // );
+    // if (sourceCardIndex < 0) return;
+
+    // const targetBoardIndex = categories.findIndex(
+    //   (item: ICategory) => item.category_id === targetCard.categoryId,
+    // );
+    // if (targetBoardIndex < 0) return;
+
+    // const targetCardIndex = categories[targetBoardIndex]?.cards?.findIndex(
+    //   (item) => item.card_id === targetCard.cardId,
+    // );
+    // if (targetCardIndex < 0) return;
+    console.log('targetCard', targetCard)
+    console.log('current Card', card)
+    if (!categoryId || !cardId)
+      return;
+
+    card.category_id = targetCard.categoryId;
+
+    await updateCard(targetCard.categoryId, cardId, card);
+    await fetchData(activeBoardId, setCategories);
+
+    setTargetCard({
+      categoryId: 0,
+    });
+  };
+
+  const onDragEnter = (e: any, categoryId: number) => {
+    // if (targetCard.cardId === cardId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+
+    setTargetCard({
+      categoryId: categoryId,
+    });
+  };
   return (
-    <div className="board" onDragEnter={(e) => onDragEnter(e, category.category_id)}>
-      <div className="board-inner" key={category?.category_id}>
-        <div className="board-header">
-          <p className="board-header-title">
-            {category?.title}
-            <span>{`${category?.cards?.length} cards`|| "0 cards"}</span>
-          </p>
-          <div
-            className="board-header-title-more"
-          >
-            <MoreHorizontal onClick={() => setShowDropdown(prev => !prev)} />
-            {showDropdown && (
-              <Dropdown
-                class="board-dropdown"
-              >
-                <p onClick={() => onClose(category.category_id)}>Delete Board</p>
-              </Dropdown>
-            )}
-          </div>
+    <main className="app-boards-container">
+      <header className="app-nav">
+        <div className="main-title">
+          <h1 style={{ fontSize: '1.5rem' }}>{activeBoardName}</h1>
         </div>
-        <div className="board-cards">
-          {category?.cards?.map((item) => (
-            <Card
-              key={item.card_id}
-              card={item}
-              categoryId={category.category_id}
+      </header>
+        <div className="app-boards" onDragOver={(e) => e.preventDefault()}>
+          {categories.map((item) => (
+            <Category
+              key={item.category_id}
+              category={item}
+              addCard={addCardHandler}
+              removeCategory={removeCategory}
               removeCard={removeCard}
               onDragEnd={onDragEnd}
+              onDragEnter={onDragEnter}
               updateCard={updateCard}
               createCard={createCard}
             />
           ))}
-          {/* <CustomInput
-            text="+ Add Card"
-            placeholder="Enter Card Title"
-            displayClass="board-add-card"
-            editClass="board-add-card-edit"
-            onSubmit={(value: string) => addCard(category?.category_id, value)}
-          /> */}
-          <button onClick={() => setShowAddCardModal(true)} className="add-btn">+ Add Card</button>
-          {showAddCardModal && (
-            <CardInfo
-              onClose={() => setShowAddCardModal(false)}
-              card={{
-                card_id: 0,
-                title: "",
-                labels: [],
-                date: "",
-                tasks: [],
-                description: ""
-              }}
-              categoryId={category.category_id}
-              updateCard={updateCard}
-              createCard={createCard}
+          <div className="app-boards-last">
+            <CustomInput
+              displayClass="app-boards-add-board"
+              editClass="app-boards-add-board-edit"
+              placeholder="Enter Board Name"
+              text="Add Category"
+              buttonText="Add Category"
+              onSubmit={addBoardHandler}
             />
-          )}
+          </div>
         </div>
-      </div>
-    </div>
+    </main>
   );
 }
-
 export default Board;

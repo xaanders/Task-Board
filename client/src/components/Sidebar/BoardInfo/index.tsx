@@ -1,10 +1,8 @@
 import React, { useState } from 'react'
 import Modal from '../../modal/Modal';
-import { List, Type } from 'react-feather';
+import { Type } from 'react-feather';
 import CustomInput from '../../CustomInput/CustomInput';
 import { dbApiCall } from '../../../helpers/DataAccess';
-import moment from 'moment';
-import { IBoard } from '../../../types/interfaces';
 
 interface Props {
     onClose: (refetch?: boolean) => void;
