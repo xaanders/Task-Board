@@ -40,7 +40,8 @@ public class User(string? name, string email, string? password)
             }
         }
         catch (Exception e)
-        {
+        {   
+            Console.WriteLine("email is invalid: {0}", e);
             return false;
         }
         try
