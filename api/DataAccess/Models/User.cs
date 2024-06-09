@@ -8,51 +8,12 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Models;
 
-public class User(string? name, string email, string? password)
+public class User(string? name, string email, string id, int? status, int? is_email_confirmed)
 {
+    public string? Id { get; set; } = id;
     public string? Name { get; set; } = name;
     public string Email { get; set; } = email;
+    public int? Status { get; set; } = status;
+    public int? Is_email_confimed { get; set; } = is_email_confirmed;
 
-    public bool IsEmailValid { get; set; } = IsValidEmail(email);
-    public string? Password { get; set; } = password;
-
-    public static bool IsValidEmail(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            return false;
-
-        try
-        {
-            // Normalize the domain
-            email = Regex.Replace(email, @"(@)(.+)$", DomainMapper,
-                                  RegexOptions.None, TimeSpan.FromMilliseconds(200));
-
-            // Examines the domain part of the email and normalizes it.
-            string DomainMapper(Match match)
-            {
-                // Use IdnMapping class to convert Unicode domain names.
-                var idn = new IdnMapping();
-
-                // Pull out and process domain name (throws ArgumentException on invalid)
-                string domainName = idn.GetAscii(match.Groups[2].Value);
-
-                return match.Groups[1].Value + domainName;
-            }
-        }
-        catch (Exception e)
-        {   
-            Console.WriteLine("email is invalid: {0}", e);
-            return false;
-        }
-        try
-        {
-            return Regex.IsMatch(email,
-                @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
-                RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            return false;
-        }
-    }
 }

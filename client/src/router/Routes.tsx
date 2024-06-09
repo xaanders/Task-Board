@@ -5,7 +5,6 @@ import Dashboard from '../dashboard';
 import SignUp from '../auth/SignUp';
 import Confirmation from '../auth/Confirmation';
 import ProtectedRoute from './ProtectedRoute';
-import { AuthProvider } from '../store/auth';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -16,7 +15,9 @@ const AppRoutes: React.FC = () => {
             <Dashboard />
           </ProtectedRoute>
         } />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={
+            <Login />
+        } />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/code-confirmation" element={<Confirmation />} />
       </Routes>

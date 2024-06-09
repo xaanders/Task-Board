@@ -38,5 +38,7 @@ public static class API
         app.MapGet("/api/refresh-token", async (HttpContext httpContext, IAmazonCognitoIdentityProvider cognitoClient, Auth auth) =>
             await auth.RefreshToken(httpContext, cognitoClient));
 
+        app.MapPost("/api/signOut", (HttpContext httpContext, Auth auth) =>
+             auth.SignOut(httpContext));
     }
 }

@@ -41,9 +41,11 @@ export interface IProject {
   project_name: string;
 }
 export interface IDBCall {
-  method: string,
-  query?: string,
-  table?: string,
+  method: string;
+  query?: string;
+  table?: string;
+  httpOnly?: boolean;
+  accessToken?: string | null;
   parameters?: Record<string, unknown>
 }
 
@@ -51,9 +53,24 @@ export interface IApiCall {
   headers?: any;
   method: string;
   body?: string;
+  credentials?: RequestCredentials;
 }
 
 export interface IUserLogin {
   email: string;
   password: string;
+}
+
+export interface IUserAccess {
+  idToken: string;
+  refreshToken: string;
+  accessToken: string;
+}
+
+export interface IUserTokenResponse {
+  email: string;
+  name: string;
+  accessToken: string;
+  message?: string;
+  noUser?: boolean;
 }

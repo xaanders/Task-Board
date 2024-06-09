@@ -1,4 +1,4 @@
-import React, {useState } from 'react';
+import React, {useEffect, useState } from 'react';
 import './auth.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
@@ -8,10 +8,14 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const {showLoading} = useAppContext();
-  const auth = useAuth();
+  const {signIn, accessToken} = useAuth();
   const navigate = useNavigate();
 
-  
+  useEffect(() => {
+    if(accessToken)
+      navigate('/');
+  }, [accessToken, navigate]);
+
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
   };
@@ -28,7 +32,7 @@ const Login: React.FC = () => {
 
     showLoading(true);
     
-    auth.signIn({email, password}, () => {
+    signIn({email, password}, () => {
       showLoading(false);
       navigate('/');
     });

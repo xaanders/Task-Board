@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar';
 import { IBoard, IProject } from '../types/interfaces';
 import { dbApiCall } from '../helpers/DataAccess';
 import NoBoard from '../components/Board/NoBoard';
+import { useAuth } from '../store/auth';
 
 
 const getActiveIds = () => {
@@ -23,6 +24,7 @@ function Dashboard() {
 
   const [activeBoardId, setActiveBoardId] = useState<number | null>(null)
   const [activeProjectId, setActiveProjectId] = useState<number | null>(null)
+  const {accessToken} = useAuth();
 
   const [boards, setBoards] = useState<IBoard[]>([]);
   const [projects, setProjects] = useState<IProject[]>([]);
@@ -32,14 +34,14 @@ function Dashboard() {
       return
     console.log(projects)
     let boards: IBoard[] = await dbApiCall({
-      method: "GET", query: 'select_board', parameters: { project_id: activeProjectId }
+      method: "GET", query: 'select_board', accessToken: accessToken, parameters: { project_id: activeProjectId }
     });
     setBoards(boards || [])
   }, [activeProjectId, projects])
 
   async function fetchProjects() {
     let projects: IProject[] = await dbApiCall({
-      method: "GET", query: 'select_project'
+      method: "GET", accessToken: accessToken, query: 'select_project'
     });
     if (projects && projects.length)
       setProjects(projects)

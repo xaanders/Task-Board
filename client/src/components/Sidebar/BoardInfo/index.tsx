@@ -3,6 +3,7 @@ import Modal from '../../modal/Modal';
 import { Type } from 'react-feather';
 import CustomInput from '../../CustomInput/CustomInput';
 import { dbApiCall } from '../../../helpers/DataAccess';
+import { useAuth } from '../../../store/auth';
 
 interface Props {
     onClose: (refetch?: boolean) => void;
@@ -15,6 +16,8 @@ function BoardInfo({ onClose, editBoard, activeBoardId, activeProjectId }: Props
 
     const [newBoard, setNewBoard] = useState(editBoard);
 
+    const {accessToken} = useAuth();
+
     const updateData = (v: string, key: string) => {
         setNewBoard(prev => ({ ...prev, [key]: v }))
     }
@@ -24,7 +27,7 @@ function BoardInfo({ onClose, editBoard, activeBoardId, activeProjectId }: Props
         e.preventDefault();
 
         await dbApiCall({
-            method: "POST", query: 'insert_board', parameters: {
+            method: "POST", query: 'insert_board', accessToken: accessToken, parameters: {
                 name: newBoard.board_name,
                 project_id: activeProjectId,
                 status: 1
@@ -41,7 +44,7 @@ function BoardInfo({ onClose, editBoard, activeBoardId, activeProjectId }: Props
             return;
 
         await dbApiCall({
-            method: "POST", query: 'update_board', parameters: {
+            method: "POST", query: 'update_board', accessToken: accessToken, parameters: {
                 name: newBoard.board_name,
                 where: { board_id: id }
             }

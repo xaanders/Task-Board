@@ -7,31 +7,33 @@ import { ICard, ICategory } from "../../types/interfaces";
 import { apiCall, dbApiCall } from "../../helpers/DataAccess";
 import { useAppContext } from "../../store";
 import moment from "moment";
+import { useAuth } from "../../store/auth";
 interface BoardProps {
   activeBoardId: number | null;
   activeBoardName: string | null;
   isProject: boolean;
 }
 
-async function fetchData(activeBoardId: number | null, setCategories: Dispatch<SetStateAction<ICategory[]>>) {
+async function fetchData(activeBoardId: number | null, accessToken: string | null, setCategories: Dispatch<SetStateAction<ICategory[]>>) {
   if (!activeBoardId)
     return;
-  let categories = await apiCall({ method: "GET", parameters: { apiGate: 'data', board_id: activeBoardId } });
+  let categories = await apiCall({ method: "GET", accessToken: accessToken, parameters: { apiGate: 'data', board_id: activeBoardId } });
   setCategories(categories)
 }
 
 function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
 
   const { showLoading } = useAppContext();
+  const {accessToken} = useAuth();
 
   const [categories, setCategories] = useState<ICategory[]>([]);
   useEffect(() => {
     if(categories.length === 0 && isProject){
       showLoading(true);
-      fetchData(activeBoardId, setCategories);
+      fetchData(activeBoardId, accessToken, setCategories);
       showLoading(false);
     }
-  }, [setCategories, activeBoardId, showLoading, categories.length, isProject]);
+  }, [setCategories, activeBoardId, showLoading, categories.length, isProject, accessToken]);
 
   const [targetCard, setTargetCard] = useState({
     categoryId: 0,
@@ -42,8 +44,8 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
       return;
 
     showLoading(true)
-    await dbApiCall({ method: 'POST', query: 'insert_category', parameters: { title: name, status: 1, board_id: activeBoardId } })
-    fetchData(activeBoardId, setCategories);
+    await dbApiCall({ method: 'POST', query: 'insert_category', accessToken: accessToken, parameters: { title: name, status: 1, board_id: activeBoardId } })
+    fetchData(activeBoardId, accessToken, setCategories);
     showLoading(false)
   };
 
@@ -53,7 +55,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     if (categoryIndex < 0) return;
 
     const tempBoardsList = [...categories];
-    const res = await dbApiCall({ method: 'PUT', query: 'update_category', parameters: { status: 0, where: { id: boardId } } });
+    const res = await dbApiCall({ method: 'PUT', query: 'update_category', accessToken: accessToken, parameters: { status: 0, where: { id: boardId } } });
 
     if (!res) return;
 
@@ -70,7 +72,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     showLoading(true);
 
     await dbApiCall({
-      method: "POST", query: 'insert_card', parameters: {
+      method: "POST", query: 'insert_card', accessToken: accessToken, parameters: {
         title,
         date: moment().utc().format("YYYY-MM-DD HH:MM:ss"),
         description: "",
@@ -78,7 +80,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
         status: 1
       }
     })
-    fetchData(activeBoardId, setCategories);
+    fetchData(activeBoardId, accessToken, setCategories);
     showLoading(false);
   };
 
@@ -87,14 +89,14 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     if (boardIndex < 0) return;
     showLoading(true);
     await dbApiCall({
-      method: "PUT", query: 'update_card', parameters: {
+      method: "PUT", query: 'update_card', accessToken: accessToken, parameters: {
         status: 0,
         where: {
           id: cardId,
         }
       }
     })
-    fetchData(activeBoardId, setCategories);
+    fetchData(activeBoardId, accessToken, setCategories);
     showLoading(false);
   };
 
@@ -106,7 +108,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     showLoading(true);
 
     await dbApiCall({ // update card data
-      method: "PUT", query: 'update_card', parameters: {
+      method: "PUT", query: 'update_card', accessToken: accessToken, parameters: {
         title: card.title,
         date: card.date,
         description: card.description,
@@ -126,6 +128,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     if (newLabels.length > 0)
       await apiCall({ // insert new labels
         method: "POST",
+        accessToken: accessToken,
         parameters: {
           table: "label",
           insertArray: newLabels,
@@ -138,6 +141,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     if (oldLabels.length > 0)
       await apiCall({ // update old tasks
         method: "PUT",
+        accessToken: accessToken,
         parameters: {
           table: "label",
           updateArray: oldLabels.map(x => ({ color: x.color, text: x.text, status: x.status === 0 ? 0 : 1, where: { id: x.label_id } }))
@@ -147,6 +151,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     if (newTasks.length > 0)
       await apiCall({ // insert its tasks
         method: "POST",
+        accessToken: accessToken,
         parameters: {
           table: "task",
           insertArray: newTasks,
@@ -158,13 +163,14 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     if (oldTasks.length > 0)
       await apiCall({ // update old tasks
         method: "PUT",
+        accessToken: accessToken,
         parameters: {
           table: "task",
           updateArray: oldTasks.map(x => ({ completed: x.completed, text: x.text, status: x.status === 0 ? 0 : 1, where: { id: x.task_id } }))
         }
       })
 
-    fetchData(activeBoardId, setCategories);
+    fetchData(activeBoardId, accessToken, setCategories);
     showLoading(false);
   };
 
@@ -176,7 +182,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     showLoading(true);
 
     const res = await dbApiCall({ // insert card data
-      method: "POST", query: 'insert_card', parameters: {
+      method: "POST", query: 'insert_card', accessToken: accessToken, parameters: {
         title: card.title,
         date: card.date || null,
         description: card.description || null,
@@ -190,6 +196,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     if (card.labels.length > 0 && id)
       await apiCall({ // insert its labels
         method: "POST",
+        accessToken: accessToken,
         parameters: {
           table: "label",
           insertArray: card.labels,
@@ -201,6 +208,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     if (card.tasks.length > 0 && id)
       await apiCall({ // insert its tasks
         method: "POST",
+        accessToken: accessToken,
         parameters: {
           table: "task",
           insertArray: card.tasks,
@@ -209,7 +217,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
         }
       })
 
-    fetchData(activeBoardId, setCategories);
+    fetchData(activeBoardId, accessToken, setCategories);
     showLoading(false);
 
   }
@@ -241,7 +249,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     card.category_id = targetCard.categoryId;
 
     await updateCard(targetCard.categoryId, cardId, card);
-    await fetchData(activeBoardId, setCategories);
+    await fetchData(activeBoardId, accessToken, setCategories);
 
     setTargetCard({
       categoryId: 0,

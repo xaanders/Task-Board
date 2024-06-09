@@ -3,9 +3,17 @@ import './App.css';
 import AppRoutes from './router/Routes';
 import { useAppContext } from './store';
 import Loading from './components/Common/Loading';
+import { useAuth } from './store/auth';
+import { useEffect } from 'react';
 
 function App() {
   const { isLoading } = useAppContext();
+  const {refreshToken, accessToken, user} = useAuth();
+
+  useEffect(() => {
+    if(!accessToken && !user)
+      refreshToken();
+  }, [])
 
   return (
     <div className="app">

@@ -21,13 +21,13 @@ public class Auth(IConfiguration configuration, Environment environment)
 
         if (email is null) return Results.BadRequest(new { Message = "No email provided." });
 
-        var user = new User(name, email, password);
+        var user = new AuthUser(name, email, password);
 
         if (!user.IsEmailValid)
             return Results.BadRequest(new { Message = "The email is invalid." });
 
         if (authType == "ConfirmEmail")                                                                 //confirm email
-            return await ConfirmEmail(cognitoClient, user.Email);        
+            return await ConfirmEmail(cognitoClient, user.Email);
         else if (authType == "ResendCode")                                                              //resend code confirmation
             return await ResendConfirmationCode(cognitoClient, user.Email);
 
@@ -47,7 +47,7 @@ public class Auth(IConfiguration configuration, Environment environment)
 
         return Results.BadRequest();
     }
-    public async Task<dynamic> InitiateSignUp(IAmazonCognitoIdentityProvider cognitoClient, User user)
+    public async Task<dynamic> InitiateSignUp(IAmazonCognitoIdentityProvider cognitoClient, AuthUser user)
     {
         try
         {
@@ -73,6 +73,16 @@ public class Auth(IConfiguration configuration, Environment environment)
 
             var result = await cognitoClient.SignUpAsync(signupRequest);
 
+            var upd = new Dictionary<string, object?>
+            {
+                {"id", result.UserSub },
+                {"email", user.Email },
+                {"name", user.Name },
+                {"status", 1 },
+            };
+
+            var res = await _u.DB.ExecuteQuery($"insert `user` (id, name, email, status) values (@id, @name, @email, @status)", upd);
+
             return Results.Ok(new { Message = "User registered successfully. Please check your email to confirm your account." });
         }
         catch (Exception ex)
@@ -86,7 +96,7 @@ public class Auth(IConfiguration configuration, Environment environment)
 
     }
     //public async Task<dynamic> ConfirmSignUp(HttpRequest request) { }
-    public async Task<dynamic> SignIn(HttpContext httpContext, IAmazonCognitoIdentityProvider cognitoClient, User user)
+    public async Task<dynamic> SignIn(HttpContext httpContext, IAmazonCognitoIdentityProvider cognitoClient, AuthUser user)
     {
         try
         {
@@ -145,7 +155,7 @@ public class Auth(IConfiguration configuration, Environment environment)
         try
         {
             if (!httpContext.Request.Cookies.TryGetValue("RefreshToken", out var refreshToken))
-                throw new Exception("Refresh token not found.");
+                return Results.Ok(new { Message = "Refresh token not found.", NoUser = true });
 
             if (!httpContext.Request.Cookies.TryGetValue("IdToken", out var IdToken))
                 throw new Exception("Id Token not found.");
@@ -168,7 +178,7 @@ public class Auth(IConfiguration configuration, Environment environment)
             var request = new InitiateAuthRequest
             {
                 ClientId = clientId,
-                AuthFlow = AuthFlowType.REFRESH_TOKEN, 
+                AuthFlow = AuthFlowType.REFRESH_TOKEN,
                 AuthParameters = authParameters
             };
 
@@ -203,6 +213,11 @@ public class Auth(IConfiguration configuration, Environment environment)
 
             return Results.Ok(new { name, email = responseEmail, accessToken = response.AuthenticationResult.AccessToken });
         }
+        catch (NotAuthorizedException ex)
+        {
+            Console.WriteLine("Error: {0}", ex.Message);
+            return Results.Ok(new { Error = true, Message = "Refresh token is expired or invalid. Please re-authenticate." });
+        }
         catch (Exception ex)
         {
             Console.WriteLine("Error: {0}", ex.Message);
@@ -227,6 +242,13 @@ public class Auth(IConfiguration configuration, Environment environment)
             };
 
             var result = await cognitoClient.ConfirmSignUpAsync(confirmRequest);
+
+
+
+            var res = await _u.DB.ExecuteQuery("update `user` set is_email_confirmed = 1 where email = @email", new Dictionary<string, object?>
+            {
+                {"email", email}
+            });
 
             return Results.Ok(new { Message = "Email confirmed successfully." });
         }
@@ -254,6 +276,20 @@ public class Auth(IConfiguration configuration, Environment environment)
         return response.CodeDeliveryDetails;
     }
 
+    public object SignOut(HttpContext httpContext)
+    {
+        try
+        {
+            httpContext.Response.Cookies.Delete("RefreshToken");
+            httpContext.Response.Cookies.Delete("IdToken");
+
+            return Results.Ok(new { Message = "Successfully signed out." });
+        }
+        catch (Exception ex)
+        {
+            return Results.BadRequest(new { Message = ex.Message });
+        }
+    }
 }
 
 

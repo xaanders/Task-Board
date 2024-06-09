@@ -1,29 +1,35 @@
 import { toast } from "react-toastify";
-import { IApiCall, IDBCall } from "../types/interfaces";
+import { IApiCall, IDBCall, IUserLogin, IUserTokenResponse } from "../types/interfaces";
 import { getErrorMessage, settings } from "./helpers";
-
 export class BoardAPI {
-  async dbCall({ path, body, method }: { path: string, body?: string, method: string }): Promise<any> {
+  async sendRequest({ path, body, method, accessToken, httpOnly }: { path: string, body?: string, method: string, accessToken?: string | null, httpOnly?: boolean }): Promise<any> {
+
     const reqObj: IApiCall = {
-      body: body,
-      method: method,
+      body,
+      method,
       headers: {
-        "content-type": "application/json"
+        "Authorization": `Bearer ${accessToken}`,
+        "content-type": "application/json",
       }
     }
 
+    if (httpOnly) {
+      reqObj.credentials = 'include';
+      delete reqObj.headers["Authorization"]
+    }
     if (method === "GET") {
       delete reqObj.body
-      delete reqObj.headers
     }
 
     const apiData = await fetch(path, reqObj);
-
     return await apiData.json();
   }
 }
 
-export async function dbApiCall({ method = 'POST', query, parameters = {} }: IDBCall) {
+export async function dbApiCall({ method = 'POST', query, accessToken, parameters = {} }: IDBCall) {
+      if(!accessToken)
+        throw new Error("No token found");
+
   const api = new BoardAPI();
 
   let path = settings.API + `universal?t=${query}`;
@@ -41,7 +47,7 @@ export async function dbApiCall({ method = 'POST', query, parameters = {} }: IDB
       }
     }
 
-    const res = await api.dbCall({ path, body: JSON.stringify(body), method })
+    const res = await api.sendRequest({ path, body: JSON.stringify(body), accessToken, method })
 
     if (res["Error"]) {
       throw new Error(res['Error'] || "Unknown error");
@@ -51,33 +57,32 @@ export async function dbApiCall({ method = 'POST', query, parameters = {} }: IDB
 
   } catch (error) {
     toast(getErrorMessage(error), { type: 'error' });
+    return;
   }
 }
 
-export async function apiCall({ method, parameters }: IDBCall) {
+export async function apiCall({ method, accessToken, httpOnly, parameters }: IDBCall) {
+
   const api = new BoardAPI();
 
   const apiGate = parameters?.apiGate || "universal"
 
   let path = settings.API + apiGate;
 
-  if(parameters?.apiGate)
+  if (parameters?.apiGate)
     delete parameters.apiGate
 
   try {
-
     if (method === 'GET' && parameters && Object.keys(parameters).length > 0) {
-
       Object.keys(parameters).forEach((key, i) => {
-        if(i === 0)
+        if (i === 0)
           path += `?${key}=${parameters[key]}`
-        else 
+        else
           path += `&${key}=${parameters[key]}`
       })
-
     }
 
-    const res = await api.dbCall({ path, body: JSON.stringify(parameters), method })
+    const res = await api.sendRequest({ path, body: JSON.stringify(parameters), method, accessToken, httpOnly })
 
     if (res['Error']) {
       throw new Error(res['Error'] || "Unknown error");
@@ -90,3 +95,15 @@ export async function apiCall({ method, parameters }: IDBCall) {
   }
 }
 
+
+export async function getRefreshToken() {
+  const response: IUserTokenResponse = await apiCall({ method: 'GET', httpOnly: true, parameters: { apiGate: 'refresh-token'} });
+
+  return response;
+}
+
+export async function signUserIn(userData: IUserLogin) {
+  const response: IUserTokenResponse = await apiCall({ method: 'POST', httpOnly: true, parameters: { ...userData, apiGate: 'signin' } });
+
+  return response;
+}
