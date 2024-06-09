@@ -3,6 +3,9 @@
   padding: 20px;
   border-right: 2px solid #ccc;
   min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .sidebar-heading {
@@ -82,3 +85,4 @@
 
 .add-project {
 }
+

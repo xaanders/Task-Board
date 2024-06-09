@@ -2,6 +2,7 @@
 using Amazon.CognitoIdentityProvider;
 namespace TaskBoardAPI;
 using DataAccess.Models;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -19,12 +20,12 @@ public class Auth(IConfiguration configuration, Environment environment)
         string? email = _u.GetParamStr("email");
         string? password = _u.GetParamStr("password");
 
-        if (email is null) return Results.BadRequest(new { Message = "No email provided." });
+        if (email is null) return Results.BadRequest(new { Error = "No email provided." });
 
         var user = new AuthUser(name, email, password);
 
         if (!user.IsEmailValid)
-            return Results.BadRequest(new { Message = "The email is invalid." });
+            return Results.BadRequest(new { Error = "The email is invalid." });
 
         if (authType == "ConfirmEmail")                                                                 //confirm email
             return await ConfirmEmail(cognitoClient, user.Email);
@@ -32,12 +33,12 @@ public class Auth(IConfiguration configuration, Environment environment)
             return await ResendConfirmationCode(cognitoClient, user.Email);
 
         if (user.Password is null)
-            return Results.BadRequest(new { Message = "No password provided." });
+            return Results.BadRequest(new { Error = "No password provided." });
 
         if (authType == "SignUp")                                                                       //sign up
         {
             if (user.Name is null)
-                return Results.BadRequest(new { Message = "No user name information provided." });
+                return Results.BadRequest(new { Error = "No user name information provided." });
 
             return await InitiateSignUp(cognitoClient, user);
         }
@@ -254,7 +255,7 @@ public class Auth(IConfiguration configuration, Environment environment)
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(new { Error = ex.Message });
         }
     }
 
@@ -278,17 +279,26 @@ public class Auth(IConfiguration configuration, Environment environment)
 
     public object SignOut(HttpContext httpContext)
     {
-        try
-        {
-            httpContext.Response.Cookies.Delete("RefreshToken");
-            httpContext.Response.Cookies.Delete("IdToken");
+        var response = httpContext.Response;
 
-            return Results.Ok(new { Message = "Successfully signed out." });
-        }
-        catch (Exception ex)
+        response.Cookies.Append("RefreshToken", "", new CookieOptions
         {
-            return Results.BadRequest(new { Message = ex.Message });
-        }
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(-1)
+        });
+
+        response.Cookies.Append("IdToken", "", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(-1)
+        });
+
+        return Results.Ok(new { Message = "Successfully signed out." });
+
     }
 }
 

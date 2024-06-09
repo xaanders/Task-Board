@@ -4,6 +4,8 @@ import BoardInfo from './BoardInfo';
 import { IBoard, IProject } from '../../types/interfaces';
 import { Edit } from 'react-feather';
 import ProjectInfo from './ProjectInfo';
+import { useAuth } from '../../store/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
     activeBoardId: number | null;
@@ -28,6 +30,9 @@ function Sidebar({ activeProjectId, activeBoardId, boards, projects, fetchBoards
 
     const [editBoard, setEditBoard] = useState(defaultBoard);
     const [editProject, setEditProject] = useState(defaultProject);
+
+    const { signOut } = useAuth();
+    const navigate = useNavigate();
 
     const closeBoardModal = (refetch?: boolean) => {
         setShowBoard(false);
@@ -60,36 +65,43 @@ function Sidebar({ activeProjectId, activeBoardId, boards, projects, fetchBoards
 
     return (
         <div className="sidebar">
-            {showProject && <ProjectInfo onClose={closeProjectModal} editProject={editProject} activeProjectId={activeProjectId} />}
-            {showBoard && <BoardInfo onClose={closeBoardModal} editBoard={editBoard} activeBoardId={activeBoardId} activeProjectId={activeProjectId} />}
-            <div className="project-list">
-                <h2 className="sidebar-heading">Projects</h2>
+            <div className='sidebar-content'>
+                {showProject && <ProjectInfo onClose={closeProjectModal} editProject={editProject} activeProjectId={activeProjectId} />}
+                {showBoard && <BoardInfo onClose={closeBoardModal} editBoard={editBoard} activeBoardId={activeBoardId} activeProjectId={activeProjectId} />}
+                <div className="project-list">
+                    <h2 className="sidebar-heading">Projects</h2>
+                    <button className="add-button" onClick={() => setShowBoard(true)}>
+                        Add New Project
+                    </button>
+                    <select className='select-project' onChange={(e) => changeProject(e)} value={current?.project_name}>
+                        {projects.map(x => (<option key={x.project_id} value={x.project_name}>{x.project_name}</option>))}
+                    </select>
+                </div>
+                <div>
+                    <h2 className="sidebar-heading">Boards</h2>
+                </div>
+                <ul className="board-list">
+                    {boards.map(board => (
+                        <li key={board.board_id} className={`board-item ${activeBoardId === board.board_id ? 'active' : ''}`}>
+                            <button className='link' onClick={() => changeBoard(board.board_id)}>
+                                {board.board_name}
+                            </button>
+                            <Edit size={16} onClick={() => {
+                                setShowBoard(true)
+                                setEditBoard(board)
+                            }} />
+                        </li>
+                    ))}
+                </ul>
                 <button className="add-button" onClick={() => setShowBoard(true)}>
-                    Add New Project
+                    Add New Board
                 </button>
-                <select className='select-project' onChange={(e) => changeProject(e)} value={current?.project_name}>
-                    {projects.map(x => (<option key={x.project_id} value={x.project_name}>{x.project_name}</option>))}
-                </select>
             </div>
-            <div>
-                <h2 className="sidebar-heading">Boards</h2>
+            <div className='user-actions'>
+                <button className="secondary-btn" onClick={() => signOut(() => navigate("/login"))}>
+                    Sign Out
+                </button>
             </div>
-            <ul className="board-list">
-                {boards.map(board => (
-                    <li key={board.board_id} className={`board-item ${activeBoardId === board.board_id ? 'active' : ''}`}>
-                        <button className='link' onClick={() => changeBoard(board.board_id)}>
-                            {board.board_name}
-                        </button>
-                        <Edit size={16} onClick={() => {
-                            setShowBoard(true)
-                            setEditBoard(board)
-                        }} />
-                    </li>
-                ))}
-            </ul>
-            <button className="add-button" onClick={() => setShowBoard(true)}>
-                Add New Board
-            </button>
         </div>
     )
 }

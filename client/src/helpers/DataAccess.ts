@@ -49,8 +49,8 @@ export async function dbApiCall({ method = 'POST', query, accessToken, parameter
 
     const res = await api.sendRequest({ path, body: JSON.stringify(body), accessToken, method })
 
-    if (res["Error"]) {
-      throw new Error(res['Error'] || "Unknown error");
+    if (res.error) {
+      throw new Error(res.error || "Unknown error");
     }
 
     return res;
@@ -84,14 +84,14 @@ export async function apiCall({ method, accessToken, httpOnly, parameters }: IDB
 
     const res = await api.sendRequest({ path, body: JSON.stringify(parameters), method, accessToken, httpOnly })
 
-    if (res['Error']) {
-      throw new Error(res['Error'] || "Unknown error");
+    if (res.error) {
+      throw new Error(res.error || "Unknown error");
     }
 
     return res;
 
-  } catch (error) {
-    toast(getErrorMessage(error), { type: 'error' });
+  } catch (error: any) {
+    toast(error.message, { type: 'error' });
   }
 }
 
@@ -104,6 +104,12 @@ export async function getRefreshToken() {
 
 export async function signUserIn(userData: IUserLogin) {
   const response: IUserTokenResponse = await apiCall({ method: 'POST', httpOnly: true, parameters: { ...userData, apiGate: 'signin' } });
+
+  return response;
+}
+
+export async function signUserOut() {
+  const response: IUserTokenResponse = await apiCall({ method: 'POST', httpOnly: true, parameters: { apiGate: 'signOut' } })
 
   return response;
 }

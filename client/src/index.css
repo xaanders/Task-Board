@@ -114,3 +114,7 @@ code {
   background-color: #007bff;
   color: #fff;
 }
+
+.error-text {
+  color: rgb(255, 164, 164);
+}

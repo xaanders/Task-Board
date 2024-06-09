@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { IUserLogin, IUserTokenResponse } from '../types/interfaces';
-import { apiCall, getRefreshToken, signUserIn } from '../helpers/DataAccess';
+import { getRefreshToken, signUserIn, signUserOut } from '../helpers/DataAccess';
 
 interface AuthContextType {
     user: any;
@@ -27,12 +27,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const signOut = useCallback(async (callback?: VoidFunction) => {
-        await apiCall({ method: 'POST', accessToken, parameters: { apiGate: 'signOut' } });
+        await signUserOut()
         setAccessToken(null)
         setUser(null);
         callback?.();
 
-    }, [accessToken]);
+    }, []);
 
     const refreshToken = useCallback(async (callback?: VoidFunction) => {
         
