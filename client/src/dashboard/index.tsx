@@ -6,76 +6,77 @@ import { IBoard, IProject } from '../types/interfaces';
 import { dbApiCall } from '../helpers/DataAccess';
 import NoBoard from '../components/Board/NoBoard';
 import { useAuth } from '../store/auth';
-
-
-const getActiveIds = () => {
-  const params = new URLSearchParams(window.location.search);
-  const board_id = params.get('board_id');
-
-  const project_id = params.get('project_id');
-
-  let boardId = board_id ? +board_id : null;
-  let projectId = project_id ? +project_id : null;
-
-  return { boardId, projectId }
-}
+import { useSearchParams } from 'react-router-dom';
 
 function Dashboard() {
 
-  const [activeBoardId, setActiveBoardId] = useState<number | null>(null)
-  const [activeProjectId, setActiveProjectId] = useState<number | null>(null)
-  const {accessToken} = useAuth();
+  const [searchParams] = useSearchParams();
+  const [{board_id, project_id}, setQuery] = useState<{board_id: number | null, project_id: number | null}>({board_id: null, project_id: null});
+
+  useEffect(()=> {
+    const board_id = searchParams.get("board_id")
+    const project_id = searchParams.get("project_id")
+
+    setQuery({
+      board_id: board_id ? +board_id : null,
+      project_id: project_id ? +project_id : null
+    })
+  }, [searchParams]);
+
+  const { accessToken } = useAuth();
 
   const [boards, setBoards] = useState<IBoard[]>([]);
   const [projects, setProjects] = useState<IProject[]>([]);
 
   const fetchBoards = useCallback(async () => {
-    if (!activeProjectId || !projects.length)
+    console.log(project_id, projects)
+    if (!project_id || !projects.length)
       return
-    console.log(projects)
-    let boards: IBoard[] = await dbApiCall({
-      method: "GET", query: 'select_board', accessToken: accessToken, parameters: { project_id: activeProjectId }
-    });
-    setBoards(boards || [])
-  }, [activeProjectId, projects])
 
-  async function fetchProjects() {
+    let boards: IBoard[] = await dbApiCall({
+      method: "GET", query: 'select_board', accessToken: accessToken, parameters: { project_id: project_id }
+    });
+
+    setBoards(boards || [])
+
+  }, [project_id, projects, accessToken])
+
+  const fetchProjects = useCallback(async () => {
     let projects: IProject[] = await dbApiCall({
       method: "GET", accessToken: accessToken, query: 'select_project'
     });
     if (projects && projects.length)
       setProjects(projects)
-  }
+
+  }, [accessToken]);
+
 
   useEffect(() => {
-    if (!boards.length && !projects.length) {
-      const { boardId, projectId } = getActiveIds();
-      setActiveBoardId(boardId);
-      setActiveProjectId(projectId);
+    fetchBoards();
+  }, [fetchBoards, project_id, projects])
+
+
+  useEffect(() => {
+    if (!projects.length) {
       fetchProjects();
-      fetchBoards();
-    }
-    else if (!boards.length && activeProjectId)
-      fetchBoards();
-    else if (!projects.length)
-      fetchProjects();
+      console.log('fetch projects') 
+    } 
+  }, [fetchProjects, projects]);
 
 
-  }, [fetchBoards, boards.length, projects.length, activeProjectId])
-
-  const activeBoardName = useMemo(() => boards.find(x => x.board_id === activeBoardId)?.board_name || null, [boards, activeBoardId]);
+  const activeBoardName = useMemo(() => boards.find(x => board_id && x.board_id === board_id)?.board_name || null, [boards, board_id]);
 
   return (
     <>
-      <Sidebar activeBoardId={activeBoardId}
-        activeProjectId={activeProjectId}
+      <Sidebar activeBoardId={board_id}
+        activeProjectId={project_id}
         fetchBoards={fetchBoards}
         fetchProjects={fetchProjects}
         boards={boards}
         projects={projects}
       />
-      {activeProjectId && !activeBoardId && <NoBoard />}
-      {activeProjectId && activeBoardId && <Board activeBoardId={activeBoardId} activeBoardName={activeBoardName} isProject={!!projects.length && !!activeBoardId} />}
+      {project_id && !board_id && <NoBoard />}
+      {project_id && board_id && <Board activeBoardId={board_id} activeBoardName={activeBoardName} isProject={!!projects.length && !!board_id} />}
     </>
   )
 

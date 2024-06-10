@@ -34,27 +34,27 @@ function Category({ category,
   }
 
   return (
-    <div className="board" onDragEnter={(e) => onDragEnter(e, category.category_id)}>
-      <div className="board-inner" key={category?.category_id}>
-        <div className="board-header">
-          <p className="board-header-title">
+    <div className="category" onDragEnter={(e) => onDragEnter(e, category.category_id)}>
+      <div className="category-inner" key={category?.category_id}>
+        <div className="category-header">
+          <p className="category-header-title">
             {category?.title}
-            <span>{`${category?.cards?.length} cards`|| "0 cards"}</span>
+            <span>{`${category?.cards?.length || 0} cards`}</span>
           </p>
           <div
-            className="board-header-title-more"
+            className="category-header-title-more"
           >
             <MoreHorizontal onClick={() => setShowDropdown(prev => !prev)} />
             {showDropdown && (
               <Dropdown
-                class="board-dropdown"
+                class="category-dropdown"
               >
                 <p onClick={() => onClose(category.category_id)}>Delete Board</p>
               </Dropdown>
             )}
           </div>
         </div>
-        <div className="board-cards">
+        <div className="category-cards">
           {category?.cards?.map((item) => (
             <Card
               key={item.card_id}

@@ -6,6 +6,7 @@ import { Edit } from 'react-feather';
 import ProjectInfo from './ProjectInfo';
 import { useAuth } from '../../store/auth';
 import { useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 interface SidebarProps {
     activeBoardId: number | null;
@@ -47,18 +48,13 @@ function Sidebar({ activeProjectId, activeBoardId, boards, projects, fetchBoards
         if (refetch)
             fetchProjects()
     }
-    const changeBoard = (boardId: number) => {
-        if (!boardId)
-            return;
-
-        window.location.replace(`/projects/boards?project_id=${activeProjectId}&board_id=${boardId}`);
-    }
+   
     const changeProject = (e: any) => {
         const projectId = projects.find(x => x.project_name === e.target.value)?.project_id
         if (!projectId)
             return;
 
-        window.location.replace(`/projects/boards?project_id=${projectId}`);
+        navigate(`/dashboard?project_id=${projectId}`);
     }
 
     const current = projects.find(x => activeProjectId === x.project_id)
@@ -70,12 +66,12 @@ function Sidebar({ activeProjectId, activeBoardId, boards, projects, fetchBoards
                 {showBoard && <BoardInfo onClose={closeBoardModal} editBoard={editBoard} activeBoardId={activeBoardId} activeProjectId={activeProjectId} />}
                 <div className="project-list">
                     <h2 className="sidebar-heading">Projects</h2>
-                    <button className="add-button" onClick={() => setShowBoard(true)}>
-                        Add New Project
-                    </button>
                     <select className='select-project' onChange={(e) => changeProject(e)} value={current?.project_name}>
                         {projects.map(x => (<option key={x.project_id} value={x.project_name}>{x.project_name}</option>))}
                     </select>
+                    <button className="add-button" onClick={() => setShowBoard(true)}>
+                        Add New Project
+                    </button>
                 </div>
                 <div>
                     <h2 className="sidebar-heading">Boards</h2>
@@ -83,9 +79,9 @@ function Sidebar({ activeProjectId, activeBoardId, boards, projects, fetchBoards
                 <ul className="board-list">
                     {boards.map(board => (
                         <li key={board.board_id} className={`board-item ${activeBoardId === board.board_id ? 'active' : ''}`}>
-                            <button className='link' onClick={() => changeBoard(board.board_id)}>
+                            <NavLink className='link' to={`/dashboard?project_id=${activeProjectId}&board_id=${board.board_id}`}>
                                 {board.board_name}
-                            </button>
+                            </NavLink>
                             <Edit size={16} onClick={() => {
                                 setShowBoard(true)
                                 setEditBoard(board)

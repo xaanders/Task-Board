@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { IUserLogin, IUserTokenResponse } from '../types/interfaces';
 import { getRefreshToken, signUserIn, signUserOut } from '../helpers/DataAccess';
+import { toast } from 'react-toastify';
 
 interface AuthContextType {
     user: any;
@@ -17,12 +18,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<any>(null);
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [isTokenFetched, setIsTokenFetched] = useState<boolean>(false);
-
     const signIn = async (userData: IUserLogin, callback: VoidFunction) => {
-        const {name, email, accessToken}: IUserTokenResponse = await signUserIn(userData);
+        const {user, accessToken}: IUserTokenResponse = await signUserIn(userData);
+
+        if(!accessToken)
+            return;
 
         setAccessToken(accessToken)
-        setUser({name, email});
+        setUser(user);
         callback();
     };
 
@@ -36,21 +39,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const refreshToken = useCallback(async (callback?: VoidFunction) => {
         
-        const {name, email, accessToken, message, noUser}: IUserTokenResponse = await getRefreshToken();
-        
-        setIsTokenFetched(true);
-        if(message && noUser)
+        const res: IUserTokenResponse = await getRefreshToken();
+        if(!res)
             return;
 
-        if (message && !noUser){
+        const {user, accessToken, noUser, isSignOut} = res;
+        
+        setIsTokenFetched(true);
+
+        if(noUser)
+            return;
+
+        if (isSignOut){
             signOut();
             return;
         }
-        
-        setAccessToken(accessToken)
-        setUser({name, email});
 
-        callback?.();
+        if(user && accessToken) {
+            setAccessToken(accessToken)
+            setUser(user);
+            callback?.();
+        }
         
     }, [signOut])
 

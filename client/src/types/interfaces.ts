@@ -1,3 +1,10 @@
+export interface IUser {
+  id: string;
+  email: string;
+  name: string;
+  status: number;
+  is_email_confirmed: number;
+}
 export interface ILabel {
   label_id?: number;
   color: string;
@@ -68,9 +75,9 @@ export interface IUserAccess {
 }
 
 export interface IUserTokenResponse {
-  email: string;
-  name: string;
-  accessToken: string;
+  user?: IUser;
+  accessToken?: string;
   message?: string;
   noUser?: boolean;
+  isSignOut?: boolean;
 }

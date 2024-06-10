@@ -1,5 +1,6 @@
 ﻿using DataAccess.Models;
 using Newtonsoft.Json.Linq;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace TaskBoardAPI;
 
@@ -33,7 +34,7 @@ public class Backend(Environment environment)
                 var res = await _u.DB.InsertMany(table, _u.parameters, returnInsertedId);
 
                 return res;
-            }
+            } // insert bulk
 
             if (_u.parameters.TryGetValue("updateArray", out object? updateArray))
             {
@@ -55,19 +56,29 @@ public class Backend(Environment environment)
 
                 return res;
 
-            }
+            } // update bulk
 
-            if (!_u.parameters.TryGetValue("t", out object? t))
+            if (!_u.parameters.TryGetValue("t", out object? t)) // get template
                 throw new Exception("No query found");
 
-            string? template = _u.GetParamStr("t");
+            string? template = _u.GetParamStr("t"); 
 
             if (template == null || !_env.templates.ContainsKey(template.ToString()))
                 throw new Exception("No template found");
 
             if (template != null)
             {
-                var res = await _u.DB.GetTemplate(_env.templates[template!.ToString()], _u.parameters, returnInsertedId);
+                var envTemplate = _env.templates[template!.ToString()];
+
+                if (request.Headers.TryGetValue("Authorization", out var AuthToken) && envTemplate.Contains("user_id = :user_id"))
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var token = AuthToken.ToString().Substring(7);
+                    var requestJwtToken = handler.ReadJwtToken(token);
+                    _u.parameters["user_id"] = requestJwtToken.Claims.First(claim => claim.Type == "sub").Value;
+                }
+
+                var res = await _u.DB.GetTemplate(envTemplate, _u.parameters, returnInsertedId);
 
                 return res;
             }
@@ -84,7 +95,7 @@ public class Backend(Environment environment)
         }
     }
 
-    public async Task<dynamic> GetAll(HttpRequest request)
+    public async Task<dynamic> GetCategories(HttpRequest request)
     {
         await _u.ReadParams(request);
 

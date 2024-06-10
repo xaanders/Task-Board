@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate, useSearchParams } from 'react-router-dom';
 import Login from '../auth/Login';
 import Dashboard from '../dashboard';
 import SignUp from '../auth/SignUp';
@@ -10,13 +10,16 @@ const AppRoutes: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={
+        <Route path="/" element={<Navigate to="/dashboard" />} />
+
+        <Route path="/dashboard" element={
           <ProtectedRoute>
-            <Dashboard />
+            <Dashboard/>
           </ProtectedRoute>
         } />
+     
         <Route path="/login" element={
-            <Login />
+          <Login />
         } />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/code-confirmation" element={<Confirmation />} />

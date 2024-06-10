@@ -2,14 +2,14 @@
 using Amazon.CognitoIdentityProvider;
 namespace TaskBoardAPI;
 using DataAccess.Models;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using System.Net;
 
 public class Auth(IConfiguration configuration, Environment environment)
 {
     private readonly Utils _u = new(environment);
+    private readonly Environment _env = environment;
+
     private readonly IConfiguration _config = configuration;
 
     public async Task<dynamic> AuthUniversal(HttpRequest request, IAmazonCognitoIdentityProvider cognitoClient, string authType, HttpContext httpContext)
@@ -140,14 +140,18 @@ public class Auth(IConfiguration configuration, Environment environment)
             var handler = new JwtSecurityTokenHandler();
             var jwtSecurityToken = handler.ReadJwtToken(token);
 
-            string name = jwtSecurityToken.Claims.First(claim => claim.Type == "name").Value;
-            string email = jwtSecurityToken.Claims.First(claim => claim.Type == "email").Value;
+            string id = jwtSecurityToken.Claims.First(claim => claim.Type == "sub").Value;
+            var dbRes = await _u.DB.GetTemplate(_env.templates["select_current_user"], new Dictionary<string, object?>
+            {
+                {"id", id}
+            });
 
-            return Results.Ok(new { name, email, accessToken = response.AuthenticationResult.AccessToken });
+
+            return Results.Ok(new { accessToken = response.AuthenticationResult.AccessToken, User = dbRes[0] });
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(new { Error = ex.Message });
         }
     }
     public async Task<dynamic> RefreshToken(HttpContext httpContext, IAmazonCognitoIdentityProvider cognitoClient)
@@ -209,15 +213,17 @@ public class Auth(IConfiguration configuration, Environment environment)
 
             var jwtSecurityToken = handler.ReadJwtToken(token);
 
-            string name = jwtSecurityToken.Claims.First(claim => claim.Type == "name").Value;
-            string responseEmail = jwtSecurityToken.Claims.First(claim => claim.Type == "email").Value;
+            var dbRes = await _u.DB.GetTemplate(_env.templates["select_current_user"], new Dictionary<string, object?>
+            {
+                {"id", sub}
+            });
 
-            return Results.Ok(new { name, email = responseEmail, accessToken = response.AuthenticationResult.AccessToken });
+            return Results.Ok(new { User = dbRes[0], response.AuthenticationResult.AccessToken });
         }
         catch (NotAuthorizedException ex)
         {
             Console.WriteLine("Error: {0}", ex.Message);
-            return Results.Ok(new { Error = true, Message = "Refresh token is expired or invalid. Please re-authenticate." });
+            return Results.Ok(new { Message = "Refresh token is expired or invalid. Please re-authenticate.", IsSignOut = true });
         }
         catch (Exception ex)
         {
@@ -261,20 +267,27 @@ public class Auth(IConfiguration configuration, Environment environment)
 
     public async Task<dynamic> ResendConfirmationCode(IAmazonCognitoIdentityProvider cognitoClient, string email)
     {
-        var secretHash = _u.CalculateSecretHash(email, _config["AwsCredentials:ClientId"], _config["AwsCredentials:ClientSecret"]);
-
-        var codeRequest = new ResendConfirmationCodeRequest
+        try
         {
-            ClientId = _config["AwsCredentials:ClientId"],
-            Username = email,
-            SecretHash = secretHash
-        };
+            var secretHash = _u.CalculateSecretHash(email, _config["AwsCredentials:ClientId"], _config["AwsCredentials:ClientSecret"]);
 
-        var response = await cognitoClient.ResendConfirmationCodeAsync(codeRequest);
+            var codeRequest = new ResendConfirmationCodeRequest
+            {
+                ClientId = _config["AwsCredentials:ClientId"],
+                Username = email,
+                SecretHash = secretHash
+            };
 
-        Console.WriteLine($"Method of delivery is {response.CodeDeliveryDetails.DeliveryMedium}");
+            var response = await cognitoClient.ResendConfirmationCodeAsync(codeRequest);
 
-        return response.CodeDeliveryDetails;
+            Console.WriteLine($"Method of delivery is {response.CodeDeliveryDetails.DeliveryMedium}");
+
+            return response.CodeDeliveryDetails;
+        }
+        catch (Exception ex)
+        {
+            return Results.BadRequest(new { ex.Message });
+        }
     }
 
     public object SignOut(HttpContext httpContext)

@@ -1,5 +1,5 @@
 {
-    "select_project": "SELECT project_id, name as project_name FROM project where status = 1",
+    "select_project": "SELECT project_id, name as project_name FROM project where status = 1 and user_id = :user_id",
     "insert_project": "INSERT project {{insert_params}}",
     "update_project": "UPDATE project {{update_params}}",
 
@@ -21,6 +21,7 @@
 
     "select_label": "SELECT id as label_id, color, text, card_id FROM label where status = 1 and card_id is not null",
     "insert_label": "INSERT label {{insert_params}}",
-    "update_label": "UPDATE label {{update_params}}"
+    "update_label": "UPDATE label {{update_params}}",
 
+    "select_current_user":  "SELECT * from `user` where id = :id and status = 1"
 }

@@ -2,14 +2,14 @@
   background-color: rgba(255, 255, 255);
   padding: 20px;
   border-right: 2px solid #ccc;
-  min-width: 200px;
+  min-width: 330px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
 .sidebar-heading {
-  margin-top: 1rem;
+  margin: 1.5rem 0;
 }
 
 .board-list {
@@ -36,7 +36,7 @@
   background-color: #efefef;
 }
 .add-button {
-  margin-top: 20px;
+  margin: 1.5rem 0;
   background-color: #007bff;
   color: #fff;
   border: none;
@@ -76,7 +76,6 @@
 }
 
 .select-project {
-  margin-top: 2rem;
   width: 100%;
   padding: 10px;
   border: 1px solid rgb(190, 190, 190);

@@ -27,8 +27,8 @@ export class BoardAPI {
 }
 
 export async function dbApiCall({ method = 'POST', query, accessToken, parameters = {} }: IDBCall) {
-      if(!accessToken)
-        throw new Error("No token found");
+  if (!accessToken)
+    throw new Error("No token found");
 
   const api = new BoardAPI();
 
@@ -83,7 +83,7 @@ export async function apiCall({ method, accessToken, httpOnly, parameters }: IDB
     }
 
     const res = await api.sendRequest({ path, body: JSON.stringify(parameters), method, accessToken, httpOnly })
-
+    console.log(res)
     if (res.error) {
       throw new Error(res.error || "Unknown error");
     }
@@ -97,8 +97,7 @@ export async function apiCall({ method, accessToken, httpOnly, parameters }: IDB
 
 
 export async function getRefreshToken() {
-  const response: IUserTokenResponse = await apiCall({ method: 'GET', httpOnly: true, parameters: { apiGate: 'refresh-token'} });
-
+  const response: IUserTokenResponse = await apiCall({ method: 'GET', httpOnly: true, parameters: { apiGate: 'refresh-token' } });
   return response;
 }
 

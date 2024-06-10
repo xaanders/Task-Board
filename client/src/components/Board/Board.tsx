@@ -14,9 +14,10 @@ interface BoardProps {
   isProject: boolean;
 }
 
-async function fetchData(activeBoardId: number | null, accessToken: string | null, setCategories: Dispatch<SetStateAction<ICategory[]>>) {
+async function fetchCategories(activeBoardId: number | null, accessToken: string | null, setCategories: Dispatch<SetStateAction<ICategory[]>>) {
   if (!activeBoardId)
     return;
+
   let categories = await apiCall({ method: "GET", accessToken: accessToken, parameters: { apiGate: 'data', board_id: activeBoardId } });
   setCategories(categories)
 }
@@ -24,16 +25,15 @@ async function fetchData(activeBoardId: number | null, accessToken: string | nul
 function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
 
   const { showLoading } = useAppContext();
-  const {accessToken} = useAuth();
+  const { accessToken } = useAuth();
 
   const [categories, setCategories] = useState<ICategory[]>([]);
+
   useEffect(() => {
-    if(categories.length === 0 && isProject){
-      showLoading(true);
-      fetchData(activeBoardId, accessToken, setCategories);
-      showLoading(false);
-    }
-  }, [setCategories, activeBoardId, showLoading, categories.length, isProject, accessToken]);
+    showLoading(true);
+    fetchCategories(activeBoardId, accessToken, setCategories);
+    showLoading(false);
+  }, [accessToken, activeBoardId, showLoading]);
 
   const [targetCard, setTargetCard] = useState({
     categoryId: 0,
@@ -45,7 +45,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
 
     showLoading(true)
     await dbApiCall({ method: 'POST', query: 'insert_category', accessToken: accessToken, parameters: { title: name, status: 1, board_id: activeBoardId } })
-    fetchData(activeBoardId, accessToken, setCategories);
+    fetchCategories(activeBoardId, accessToken, setCategories);
     showLoading(false)
   };
 
@@ -80,7 +80,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
         status: 1
       }
     })
-    fetchData(activeBoardId, accessToken, setCategories);
+    fetchCategories(activeBoardId, accessToken, setCategories);
     showLoading(false);
   };
 
@@ -96,7 +96,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
         }
       }
     })
-    fetchData(activeBoardId, accessToken, setCategories);
+    fetchCategories(activeBoardId, accessToken, setCategories);
     showLoading(false);
   };
 
@@ -170,7 +170,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
         }
       })
 
-    fetchData(activeBoardId, accessToken, setCategories);
+    fetchCategories(activeBoardId, accessToken, setCategories);
     showLoading(false);
   };
 
@@ -217,7 +217,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
         }
       })
 
-    fetchData(activeBoardId, accessToken, setCategories);
+    fetchCategories(activeBoardId, accessToken, setCategories);
     showLoading(false);
 
   }
@@ -249,7 +249,7 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
     card.category_id = targetCard.categoryId;
 
     await updateCard(targetCard.categoryId, cardId, card);
-    await fetchData(activeBoardId, accessToken, setCategories);
+    await fetchCategories(activeBoardId, accessToken, setCategories);
 
     setTargetCard({
       categoryId: 0,
@@ -272,7 +272,8 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
           <h1 style={{ fontSize: '1.5rem' }}>{activeBoardName}</h1>
         </div>
       </header>
-        <div className="app-boards" onDragOver={(e) => e.preventDefault()}>
+      <div className="app-content">
+        <ul className="app-boards" onDragOver={(e) => e.preventDefault()}>
           {categories.map((item) => (
             <Category
               key={item.category_id}
@@ -296,7 +297,8 @@ function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {
               onSubmit={addBoardHandler}
             />
           </div>
-        </div>
+        </ul>
+      </div>
     </main>
   );
 }

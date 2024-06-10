@@ -21,7 +21,7 @@ public static class API
 
         app.MapPut("/api/universal", async (HttpRequest request, Backend backend) => await backend.Universal(request)).RequireAuthorization();
 
-        app.MapGet("/api/data", async (HttpRequest request, Backend backend) => await backend.GetAll(request)).RequireAuthorization();
+        app.MapGet("/api/data", async (HttpRequest request, Backend backend) => await backend.GetCategories(request)).RequireAuthorization();
 
         app.MapPost("/api/register", async (HttpContext httpContext, HttpRequest request, IAmazonCognitoIdentityProvider cognitoClient, Auth auth) =>
             await auth.AuthUniversal(request, cognitoClient, "SignUp", httpContext));
