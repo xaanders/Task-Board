@@ -5,6 +5,7 @@ import { useAppContext } from './store';
 import Loading from './components/Common/Loading';
 import { useAuth } from './store/auth';
 import { useEffect } from 'react';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const { isLoading } = useAppContext();
@@ -13,7 +14,7 @@ function App() {
   useEffect(() => {
     if(!accessToken && !user)
       refreshToken();
-  }, [])
+  }, [accessToken, refreshToken, user])
 
   return (
     <div className="app">

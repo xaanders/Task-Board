@@ -12,6 +12,8 @@
   cursor: pointer;
   width: fit-content;
   transition: 200ms;
+  margin-bottom: 10px;
+
 }
 
 .custom-input-display:hover {

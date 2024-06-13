@@ -6,31 +6,21 @@ import { IBoard, IProject } from '../types/interfaces';
 import { dbApiCall } from '../helpers/DataAccess';
 import NoBoard from '../components/Board/NoBoard';
 import { useAuth } from '../store/auth';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 function Dashboard() {
 
   const [searchParams] = useSearchParams();
-  const [{board_id, project_id}, setQuery] = useState<{board_id: number | null, project_id: number | null}>({board_id: null, project_id: null});
-
-  useEffect(()=> {
-    const board_id = searchParams.get("board_id")
-    const project_id = searchParams.get("project_id")
-
-    setQuery({
-      board_id: board_id ? +board_id : null,
-      project_id: project_id ? +project_id : null
-    })
-  }, [searchParams]);
+  const [{ board_id, project_id }, setQuery] = useState<{ board_id: number | null, project_id: number | null }>({ board_id: null, project_id: null });
 
   const { accessToken } = useAuth();
+  const navigate = useNavigate();
 
   const [boards, setBoards] = useState<IBoard[]>([]);
   const [projects, setProjects] = useState<IProject[]>([]);
 
   const fetchBoards = useCallback(async () => {
-    console.log(project_id, projects)
-    if (!project_id || !projects.length)
+    if (!projects.length || !project_id)
       return
 
     let boards: IBoard[] = await dbApiCall({
@@ -50,6 +40,19 @@ function Dashboard() {
 
   }, [accessToken]);
 
+  useEffect(() => {
+    const board_id = searchParams.get("board_id")
+    const project_id = searchParams.get("project_id")
+
+    if (!project_id && projects[0]?.project_id)
+      navigate(`/dashboard?project_id=${projects[0].project_id}`)
+    else
+      setQuery({
+        board_id: board_id ? +board_id : null,
+        project_id: project_id ? +project_id : null
+      })
+
+  }, [navigate, projects, searchParams]);
 
   useEffect(() => {
     fetchBoards();
@@ -59,8 +62,8 @@ function Dashboard() {
   useEffect(() => {
     if (!projects.length) {
       fetchProjects();
-      console.log('fetch projects') 
-    } 
+      console.log('fetch projects')
+    }
   }, [fetchProjects, projects]);
 
 

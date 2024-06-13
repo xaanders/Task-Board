@@ -54,7 +54,7 @@ input {
   text-align: center;
 }
 
-button {
+.main-btn {
   padding: 10px;
   font-size: 16px;
   color: white;
@@ -66,16 +66,16 @@ button {
   margin-bottom: 10px;
 }
 
-button:disabled {
+.main-btn:disabled {
   background-color: #a6d1ff;
 }
-button:hover:disabled {
+.main-btn:hover:disabled {
   background-color: #a6d1ff;
   color: white;
   cursor: auto;
 }
 
-button:hover {
+.main-btn:hover {
   background-color: #fff;
   color: #007bff;
   border: 1px solid #007bff;

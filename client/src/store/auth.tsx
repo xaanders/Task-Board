@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { IUserLogin, IUserTokenResponse } from '../types/interfaces';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { IUser, IUserLogin, IUserTokenResponse } from '../types/interfaces';
 import { getRefreshToken, signUserIn, signUserOut } from '../helpers/DataAccess';
-import { toast } from 'react-toastify';
 
 interface AuthContextType {
-    user: any;
+    user: IUser | null;
     accessToken: string | null;
     signIn: (userData: IUserLogin, callback: VoidFunction) => void;
     signOut: (callback?: VoidFunction) => void;
@@ -15,16 +14,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<IUser | null>(null);
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [isTokenFetched, setIsTokenFetched] = useState<boolean>(false);
     const signIn = async (userData: IUserLogin, callback: VoidFunction) => {
-        const {user, accessToken}: IUserTokenResponse = await signUserIn(userData);
+        const res = await signUserIn(userData);
 
-        if(!accessToken)
+        if(!res)
+            return;
+        
+        const {user, accessToken}: IUserTokenResponse = res;
+
+        if(!accessToken || !user)
             return;
 
-        setAccessToken(accessToken)
+        setAccessToken(accessToken);
         setUser(user);
         callback();
     };

@@ -118,3 +118,6 @@ code {
 .error-text {
   color: rgb(255, 164, 164);
 }
+a {
+  color: black;
+}

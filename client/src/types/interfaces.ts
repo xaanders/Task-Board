@@ -2,7 +2,6 @@ export interface IUser {
   id: string;
   email: string;
   name: string;
-  status: number;
   is_email_confirmed: number;
 }
 export interface ILabel {

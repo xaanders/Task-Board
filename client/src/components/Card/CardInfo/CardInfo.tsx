@@ -220,7 +220,7 @@ function CardInfo({ onClose, card, categoryId, updateCard, createCard }: CardInf
             <CheckSquare />
             <p>Tasks</p>
           </div>
-          <div>
+          <div className="progress-bar">
             <p>Progress bar:</p>
             <div className="cardinfo-box-progress-bar">
               <div

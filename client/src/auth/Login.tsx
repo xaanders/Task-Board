@@ -1,4 +1,4 @@
-import React, {useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './auth.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
@@ -7,12 +7,12 @@ import { useAppContext } from '../store';
 const Login: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const {showLoading} = useAppContext();
-  const {signIn, accessToken} = useAuth();
+  const { showLoading } = useAppContext();
+  const { signIn, accessToken } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if(accessToken)
+    if (accessToken)
       navigate('/');
   }, [accessToken, navigate]);
 
@@ -27,16 +27,14 @@ const Login: React.FC = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Add your login logic here
-    if(!email || !password)
+    if (!email || !password)
       return
 
     showLoading(true);
-    
-    signIn({email, password}, () => {
-      showLoading(false);
+    signIn({ email, password }, () => {
       navigate('/');
     });
-
+    showLoading(false);
   };
 
   return (
@@ -64,8 +62,8 @@ const Login: React.FC = () => {
             />
           </div>
           <div className='actions'>
-            <button type="submit">Login</button>
-            <Link className="secondary-btn" to="/sign-up">SignUp</Link>
+            <button type="submit" className="main-btn">Login</button>
+            or <Link className="link-back" to="/sign-up">SignUp</Link>
           </div>
         </form>
       </div>

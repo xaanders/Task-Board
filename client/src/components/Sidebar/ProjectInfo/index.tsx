@@ -7,7 +7,7 @@ import { IProject } from '../../../types/interfaces';
 import { useAuth } from '../../../store/auth';
 
 interface Props {
-    onClose: () => void;
+    onClose: (refetch?: boolean) => void;
     editProject: IProject;
     activeProjectId: number | null;
 
@@ -17,7 +17,7 @@ interface Props {
 function ProjectInfo({ onClose, editProject, activeProjectId }: Props) {
 
     const [newProject, setNewProject] = useState(editProject);
-    const {accessToken} = useAuth();
+    const {accessToken, user} = useAuth();
 
     const updateData = (v: string, key: string) => {
         setNewProject(prev => ({ ...prev, [key]: v }))
@@ -26,13 +26,16 @@ function ProjectInfo({ onClose, editProject, activeProjectId }: Props) {
     const saveNewProject = async (e: any) => {
         e.preventDefault();
 
-        await dbApiCall({
-            method: "POST", query: 'insert_project', accessToken: accessToken, parameters: {
-                ...newProject,
-                status: 1
-            }
-        })
-        onClose();
+        if(user)
+            await dbApiCall({
+                method: "POST", query: 'insert_project', accessToken: accessToken, parameters: {
+                    name: newProject.project_name,
+                    user_id: user.id,
+                    status: 1
+                }
+            })
+            
+        onClose(true);
     }
 
     const updateProject = async (e: any) => {

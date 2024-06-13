@@ -69,7 +69,7 @@ function Sidebar({ activeProjectId, activeBoardId, boards, projects, fetchBoards
                     <select className='select-project' onChange={(e) => changeProject(e)} value={current?.project_name}>
                         {projects.map(x => (<option key={x.project_id} value={x.project_name}>{x.project_name}</option>))}
                     </select>
-                    <button className="add-button" onClick={() => setShowBoard(true)}>
+                    <button className="add-button" onClick={() => setShowProject(true)}>
                         Add New Project
                     </button>
                 </div>

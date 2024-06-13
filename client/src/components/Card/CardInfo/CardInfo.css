@@ -13,7 +13,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 24px;
 }
 
 .cardinfo-box-title {
@@ -74,6 +74,7 @@
 }
 
 .cardinfo-box-progress-bar {
+  margin: 10px 0;
   width: 100%;
   border-radius: 30px;
   height: 10px;
@@ -145,3 +146,9 @@
   background-color: #046daa;
 }
 
+.progress-bar {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem
+}

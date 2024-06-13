@@ -73,7 +73,7 @@ function Category({ category,
             editClass="board-add-card-edit"
             onSubmit={(value: string) => addCard(category?.category_id, value)}
           /> */}
-          <button onClick={() => setShowAddCardModal(true)} className="add-btn">+ Add Card</button>
+          <button onClick={() => setShowAddCardModal(true)} className="secondary-btn">+ Add Card</button>
           {showAddCardModal && (
             <CardInfo
               onClose={() => setShowAddCardModal(false)}

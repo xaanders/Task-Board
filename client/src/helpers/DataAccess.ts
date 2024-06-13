@@ -84,8 +84,8 @@ export async function apiCall({ method, accessToken, httpOnly, parameters }: IDB
 
     const res = await api.sendRequest({ path, body: JSON.stringify(parameters), method, accessToken, httpOnly })
     console.log(res)
-    if (res.error) {
-      throw new Error(res.error || "Unknown error");
+    if (res && (res.Error || res.error)) {
+      throw new Error(res.Error || res.error || "Unknown error");
     }
 
     return res;

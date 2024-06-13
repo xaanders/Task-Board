@@ -62,7 +62,7 @@ const Confirmation: React.FC = () => {
                         />
                     </div>
                     <div className='actions'>
-                        <button type="submit">Submit</button>
+                        <button type="submit" className="main-btn">Submit</button>
                     </div>
                 </form>
             </div>

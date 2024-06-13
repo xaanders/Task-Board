@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './auth.css';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../store/auth';
 import { useAppContext } from '../store';
 import { apiCall } from '../helpers/DataAccess';
 import { toast } from 'react-toastify';
@@ -16,53 +15,45 @@ const SignUp: React.FC = () => {
 
     const navigate = useNavigate();
 
-    const checkForm = () => {
-        if (email && name && password === confirmPassword && !error)
+    useEffect(() => {
+        if (email && name && password && confirmPassword && password === confirmPassword)
             setIsFormValid(true)
-    }
+        else 
+            setIsFormValid(false)
+
+        if(password && confirmPassword && password !== confirmPassword)
+            setError("Passwords don't match")
+        else if(password && confirmPassword && password === confirmPassword)
+            setError("")
+
+    }, [confirmPassword, email, name, password])
 
     const { showLoading } = useAppContext();
 
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setEmail(e.target.value);
-        checkForm();
     };
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setName(e.target.value);
-        checkForm();
     };
 
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setPassword(e.target.value);
-        checkForm();
     };
 
     const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-
         setConfirmPassword(e.target.value);
-        checkForm();
     };
-
-    const validatePasswords = () => {
-        if (password && confirmPassword && password !== confirmPassword) {
-            setError("Passwords don't match")
-        }
-        checkForm();
-    }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         console.log(isFormValid)
         if (!isFormValid)
             return;
 
         showLoading(true);
-
         const res = await apiCall({ method: 'POST', parameters: { name, email, password, apiGate: 'register' } });
-
         showLoading(false);
-
 
         if (res && res.message) {
             toast.success(res.message)
@@ -83,6 +74,7 @@ const SignUp: React.FC = () => {
                             type="email"
                             id="email"
                             value={email}
+                            required
                             onChange={handleEmailChange}
                         />
                     </div>
@@ -92,6 +84,7 @@ const SignUp: React.FC = () => {
                             type="text"
                             id="name"
                             value={name}
+                            required
                             onChange={handleNameChange}
                         />
                     </div>
@@ -101,8 +94,8 @@ const SignUp: React.FC = () => {
                             type="password"
                             id="password"
                             value={password}
+                            required
                             onChange={handlePasswordChange}
-                            onBlur={validatePasswords}
 
                         />
                     </div>
@@ -112,13 +105,13 @@ const SignUp: React.FC = () => {
                             type="password"
                             id="confirmPassword"
                             value={confirmPassword}
+                            required
                             onChange={handleConfirmPasswordChange}
-                            onBlur={validatePasswords}
                         />
                     </div>
 
                     <div className="actions">
-                        <button type="submit" disabled={!isFormValid}>Create profile</button>
+                        <button type="submit" className='main-btn' disabled={!isFormValid}>Create profile</button>
                         or <Link className="link-back" to="/login">Login</Link>
                     </div>
                     {error && <p className='error-text'>{error}</p>}
