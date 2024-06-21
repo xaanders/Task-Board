@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './auth.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../store';
 import { apiCall } from '../helpers/DataAccess';
 import { toast } from 'react-toastify';
@@ -12,9 +12,19 @@ const SignUp: React.FC = () => {
     const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [error, setError] = useState<string>('');
     const [isFormValid, setIsFormValid] = useState<boolean>(false);
+    const [searchParams] = useSearchParams();
 
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const queryEmail = searchParams.get("email")
+        const queryName = searchParams.get("name")
+    
+        if (queryEmail && queryName) {
+            setEmail(queryEmail)
+            setName(queryName)
+        }
+      }, [ searchParams]);
     useEffect(() => {
         if (email && name && password && confirmPassword && password === confirmPassword)
             setIsFormValid(true)
