@@ -121,3 +121,16 @@ code {
 a {
   color: black;
 }
+
+.edit-button {
+  display: inline-block;
+  background-color: #fff;
+  border: 1px solid grey;
+  padding: 5px;
+  border-radius: 4px;
+  margin: 0;
+  text-align: left;
+  flex: 0 1 50%;
+  text-align: center;
+  cursor: pointer
+}

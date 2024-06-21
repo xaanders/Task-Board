@@ -7,6 +7,8 @@ import ProjectInfo from './ProjectInfo';
 import { useAuth } from '../../store/auth';
 import { useNavigate } from 'react-router-dom';
 import { NavLink } from 'react-router-dom';
+import { dbApiCall } from '../../helpers/DataAccess';
+import { toast } from 'react-toastify';
 
 interface SidebarProps {
     activeBoardId: number | null;
@@ -20,7 +22,10 @@ interface SidebarProps {
 const defaultBoard = {
     board_name: '',
 }
-const defaultProject = {
+interface IDefaultProject {
+    project_name: '';
+}
+const defaultProject: IDefaultProject = {
     project_name: '',
 }
 
@@ -30,9 +35,9 @@ function Sidebar({ activeProjectId, activeBoardId, boards, projects, fetchBoards
     const [showProject, setShowProject] = useState(false);
 
     const [editBoard, setEditBoard] = useState(defaultBoard);
-    const [editProject, setEditProject] = useState(defaultProject);
+    const [editProject, setEditProject] = useState<IDefaultProject | IProject>(defaultProject);
 
-    const { signOut } = useAuth();
+    const { signOut, accessToken } = useAuth();
     const navigate = useNavigate();
 
     const closeBoardModal = (refetch?: boolean) => {
@@ -57,6 +62,31 @@ function Sidebar({ activeProjectId, activeBoardId, boards, projects, fetchBoards
         navigate(`/dashboard?project_id=${projectId}`);
     }
 
+    const removeProject = async () => {
+        const project = projects.find(x => x.project_id === activeProjectId)
+        const confirm = window.confirm(`Are you sure you want to remove project ${project?.project_name}?`)
+
+        if(!confirm || !project)
+            return;
+
+        const {error} = await dbApiCall({method: 'POST', query: "update_project", accessToken, parameters: {status: 0, where: {project_id: project.project_id}}});
+        if(error)
+            return;
+
+        toast.success(`Successfully remove a project ${project?.project_name}`)
+        await fetchProjects();
+        navigate(`/dashboard?project_id=${projects[0].project_id}`)
+    }
+
+    const editCurrentProject = () => {
+        const project = projects.find(x => x.project_id === activeProjectId)
+        if(!project)
+            return;
+        
+        setEditProject(project);
+        setShowProject(true);
+    }
+
     const current = projects.find(x => activeProjectId === x.project_id)
 
     return (
@@ -72,6 +102,10 @@ function Sidebar({ activeProjectId, activeBoardId, boards, projects, fetchBoards
                     <button className="add-button" onClick={() => setShowProject(true)}>
                         Add New Project
                     </button>
+                    <div style={{textAlign: 'left', display: 'flex', justifyContent: 'space-between', gap: '10px'}}>
+                    <button className="edit-button" onClick={removeProject}>Remove This Project</button>
+                    <button className="edit-button" onClick={editCurrentProject}>Edit This Project</button>
+                    </div>
                 </div>
                 <div>
                     <h2 className="sidebar-heading">Boards</h2>
