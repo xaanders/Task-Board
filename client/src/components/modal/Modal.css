@@ -15,14 +15,18 @@
 }
 .modal-scrollable {
   overflow: auto;
+  height: 100%;
+  width: 100%;
+  padding: 4rem 0;
 }
+
 .modal-content {
   padding: 10px 5px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 1px 1px 20px rgba(0, 0, 0, 0.12);
+  display: inline-block;
 }
-
 
 .modal-content::-webkit-scrollbar {
   width: 12px !important;

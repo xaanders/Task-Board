@@ -7,12 +7,12 @@ function Modal(props: any) {
 
   useEffect(() => {
     const body = document.querySelector('body');
-    if(body)
-      body.style.overflow="hidden";
+    if (body)
+      body.style.overflow = "hidden";
 
     return () => {
-      if(body)
-        body.style.overflow="auto"
+      if (body)
+        body.style.overflow = "auto"
     }
   }, [])
 
@@ -20,16 +20,18 @@ function Modal(props: any) {
     <div
       className="modal"
     >
-      <div
-        className="modal-content custom-scroll"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <div className="modal-scrollable">
+        <div
+          className="modal-content custom-scroll"
+          onClick={(event) => event.stopPropagation()}
+        >
           <div className="modal-header">
-            <X style={{cursor: "pointer"}} onClick={() => props?.onClose() || {}} />
+            <X style={{ cursor: "pointer" }} onClick={() => props?.onClose() || {}} />
           </div>
-          <div className="modal-scrollable">
+          <div>
             {props.children}
           </div>
+        </div>
       </div>
     </div>
   );

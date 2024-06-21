@@ -75,17 +75,32 @@ function ProjectInfo({ onClose, editProject, activeProjectId }: Props) {
 
     const updateProject = async (e: any) => {
         e.preventDefault();
-        const id = newProject.project_id;
-        if (!id)
+        const projectId = newProject.project_id;
+
+        if (!projectId)
             return;
 
-        const newProjectId: any[] = await dbApiCall({
+        showLoading(true);
+        await dbApiCall({
             method: "POST", query: 'update_project', accessToken: accessToken, parameters: {
                 name: newProject.project_name,
-                where: { project_id: id }
+                where: { project_id: projectId }
             }
         })
-        console.log(newProjectId)
+        
+        for (let i = 0; i < invitedUsers.length; i++) {
+            await apiCall({
+                method: "POST", accessToken, parameters: {
+                    inviteUser: true,
+                    sendEmail: invitedUsers[i].email,
+                    sendName: invitedUsers[i].name,
+                    projectId,
+                    projectName: newProject.project_name
+                }
+            })
+        }
+
+        showLoading(false);
 
         onClose();
     }
