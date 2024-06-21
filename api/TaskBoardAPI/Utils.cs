@@ -1,5 +1,6 @@
 ﻿using DataAccess.DBAccess;
 using Newtonsoft.Json;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -18,6 +19,15 @@ public class Utils(Environment environment)
     {
         parameters.Clear();
         request.Query?.ToList()?.ForEach(x => parameters[x.Key] = x.Value);
+
+
+        if (request.Headers.TryGetValue("Authorization", out var AuthToken))
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var token = AuthToken.ToString().Substring(7);
+            var requestJwtToken = handler.ReadJwtToken(token);
+            parameters["user_id"] = requestJwtToken.Claims.First(claim => claim.Type == "sub").Value;
+        }
 
 
         if (request.Method == "GET")
@@ -82,4 +92,5 @@ public class Utils(Environment environment)
             return Convert.ToBase64String(hash);
         }
     }
+
 }

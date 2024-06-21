@@ -54,6 +54,9 @@ public class MySqlDataAccess : IMySqlDataAccess
 
         List<string?> ignore = ["t", "where"];
 
+        if (!query.Contains(":user_id"))
+            ignore.Add("user_id");
+
         Dictionary<string, object?> sqlParams =
             parameters.Where(p => !ignore.Contains(p.Key))
             .ToDictionary(x => x.Key, x => x.Value);
