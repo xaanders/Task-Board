@@ -141,13 +141,13 @@ public class Auth(IConfiguration configuration, Environment environment)
             var jwtSecurityToken = handler.ReadJwtToken(token);
 
             string id = jwtSecurityToken.Claims.First(claim => claim.Type == "sub").Value;
+
             var dbRes = await _u.DB.GetTemplate(_env.templates["select_current_user"], new Dictionary<string, object?>
             {
                 {"id", id}
             });
 
-
-            return Results.Ok(new { accessToken = response.AuthenticationResult.AccessToken, User = dbRes[0] });
+            return Results.Ok(new { accessToken = response.AuthenticationResult.AccessToken, User = dbRes.FirstOrDefault() });
         }
         catch (Exception ex)
         {
@@ -218,7 +218,7 @@ public class Auth(IConfiguration configuration, Environment environment)
                 {"id", sub}
             });
 
-            return Results.Ok(new { User = dbRes[0], response.AuthenticationResult.AccessToken });
+            return Results.Ok(new { User = dbRes.FirstOrDefault(), response.AuthenticationResult.AccessToken });
         }
         catch (NotAuthorizedException ex)
         {

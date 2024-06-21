@@ -44,7 +44,7 @@ public class Backend(Environment environment)
 
                 var arr = list?.ToObject<List<Dictionary<string, object?>>>();
 
-                foreach(var item in arr ?? [])
+                foreach (var item in arr ?? [])
                 {
                     var jWhere = item["where"] as JObject;
                     item["where"] = jWhere?.ToObject<Dictionary<string, object?>>();
@@ -61,7 +61,7 @@ public class Backend(Environment environment)
             if (!_u.parameters.TryGetValue("t", out object? t)) // get template
                 throw new Exception("No query found");
 
-            string? template = _u.GetParamStr("t"); 
+            string? template = _u.GetParamStr("t");
 
             if (template == null || !_env.templates.ContainsKey(template.ToString()))
                 throw new Exception("No template found");
@@ -101,12 +101,12 @@ public class Backend(Environment environment)
 
         try
         {
-            var categoryData = await _u.DB.GetTemplate(_env.templates["select_category"], _u.parameters) as IEnumerable<dynamic?>
+            var categoryData = await _u.DB.GetTemplate(_env.templates["select_category"], _u.parameters)
                 ?? throw new Exception("Couldn't get data"); // get categories
 
-            var cardsData = await _u.DB.GetTemplate(_env.templates["select_card"], _u.parameters) as IEnumerable<dynamic?>; // get cards
-            var tasksData = await _u.DB.GetTemplate(_env.templates["select_task"], _u.parameters) as IEnumerable<dynamic?>; // get tasks
-            var labelsData = await _u.DB.GetTemplate(_env.templates["select_label"], _u.parameters) as IEnumerable<dynamic?>; // get labels
+            var cardsData = await _u.DB.GetTemplate(_env.templates["select_card"], _u.parameters); // get cards
+            var tasksData = await _u.DB.GetTemplate(_env.templates["select_task"], _u.parameters); // get tasks
+            var labelsData = await _u.DB.GetTemplate(_env.templates["select_label"], _u.parameters); // get labels
 
             var categories = new List<Category>();
             var cards = new List<Card>();
@@ -120,7 +120,7 @@ public class Backend(Environment environment)
             {
                 if (item is not null)
                 {
-                    var t = new CardTask(item.task_id, item.title, item.status, item.text, item.card_id, item.completed);
+                    var t = new CardTask((int)item["task_id"], item["title"], item["status"], item["text"], item["card_id"], item["completed"]);
                     tasks.Add(t);
                 }
             }
@@ -128,7 +128,7 @@ public class Backend(Environment environment)
             {
                 if (item is not null)
                 {
-                    var l = new Label(item.label_id, item.color, item.text, item.card_id);
+                    var l = new Label(item["label_id"], item["color"], item["text"], item["card_id"]);
                     labels.Add(l);
                 }
             }
@@ -140,7 +140,7 @@ public class Backend(Environment environment)
             {
                 if (item is not null)
                 {
-                    var c = new Card(item.card_id, item.title, item.category_id, item.date, item.description, new List<CardTask?>(), new List<Label?>());
+                    var c = new Card(item["card_id"], item["title"], item["category_id"], item["date"], item["description"], new List<CardTask?>(), new List<Label?>());
 
                     tasks.ForEach(x =>
                     {
@@ -161,7 +161,7 @@ public class Backend(Environment environment)
             {
                 if (item is not null)
                 {
-                    var c = new Category(item.category_id, item.title, item.board_id, new List<Card?>());
+                    var c = new Category(item["category_id"], item["title"], item["board_id"], new List<Card?>());
 
                     cards.ForEach(x =>
                     {

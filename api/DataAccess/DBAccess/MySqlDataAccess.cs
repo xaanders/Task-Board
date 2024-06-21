@@ -1,6 +1,8 @@
 ﻿using Dapper;
 using MySqlConnector;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 
 namespace DataAccess.DBAccess;
@@ -18,10 +20,11 @@ public class MySqlDataAccess : IMySqlDataAccess
         _connection = $"Server={server}; User ID={user}; Password={pass}; Database={name}";
     }
 
-    public async Task<IEnumerable<dynamic>> ExecuteQuery(string query, Dictionary<string, object?> parameters)
+    public async Task<List<Dictionary<string, object?>>> ExecuteQuery(string query, Dictionary<string, object?> parameters)
     {
         using IDbConnection connection = new MySqlConnection(_connection);
 
+        Console.WriteLine($"QUERY: {query}");
         if (query.Contains("INSERT") || query.Contains("UPDATE"))
         {
             if (parameters.Count == 0)
@@ -36,15 +39,17 @@ public class MySqlDataAccess : IMySqlDataAccess
 
             var res = await connection.QueryAsync(query, dynamicParameters);
 
-            return res;
+            return ConvertToList(res);
         }
         else
         {
-            return await connection.QueryAsync(query, parameters);
+            var res = await connection.QueryAsync(query, parameters);
+
+            return ConvertToList(res);
         }
     }
 
-    public async Task<dynamic> GetTemplate(string query, Dictionary<string, object?> parameters, bool returnInsertId = true)
+    public async Task<List<Dictionary<string, object?>>> GetTemplate(string query, Dictionary<string, object?> parameters, bool returnInsertId = true)
     {
 
         List<string?> ignore = ["t", "where"];
@@ -77,9 +82,6 @@ public class MySqlDataAccess : IMySqlDataAccess
 
         query = query.Replace(":", "@");
 
-        Console.WriteLine("QUERY: {0}", query);
-
-
         var res = await ExecuteQuery(query, sqlParams);
 
         return res;
@@ -97,7 +99,7 @@ public class MySqlDataAccess : IMySqlDataAccess
             throw new Exception("no insertStatic");
 
 
-        var results = new List<string>();
+        var results = new List<string?>();
 
         foreach (Dictionary<string, object?> insertData in (List<Dictionary<string, object?>>?)insertArray ?? [])
         {
@@ -114,7 +116,7 @@ public class MySqlDataAccess : IMySqlDataAccess
             var res = await ExecuteQuery(q, insertData);
 
             if (returnInsertId)
-                results.Add(res.ToList()[0]);
+                results.Add(res[0]["lastInserId"] as string);
         }
         return results;
     }
@@ -159,6 +161,25 @@ public class MySqlDataAccess : IMySqlDataAccess
 
 
         return new { data, errors };
+    }
+
+    private List<Dictionary<string, object?>> ConvertToList(IEnumerable<dynamic> res)
+    {
+        var resultList = new List<Dictionary<string, object?>>();
+
+        foreach (var row in res)
+        {
+            var dictionary = new Dictionary<string, object?>();
+
+            foreach (var property in row)
+            {
+                dictionary[property.Key] = property.Value;
+            }
+
+            resultList.Add(dictionary);
+        }
+
+        return resultList;
     }
 
 }
