@@ -15,7 +15,6 @@
 }
 .modal-scrollable {
   overflow: auto;
-  height: 85vh;
 }
 .modal-content {
   padding: 10px 5px;

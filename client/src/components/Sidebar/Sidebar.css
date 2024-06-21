@@ -91,9 +91,11 @@
 .users-list {
   display: flex;
   flex-direction: column;
+  margin-top: 1rem;
 }
 
 .list-item {
   display: flex;
   gap: 5px;
+  align-items: center;
 }
