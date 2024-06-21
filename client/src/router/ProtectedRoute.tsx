@@ -1,6 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../store/auth";
-import { useEffect } from "react";
 import Loading from "../components/Common/Loading";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
