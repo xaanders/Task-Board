@@ -18,6 +18,11 @@ public class Backend(Environment environment, EmailService emailService)
         {
             await _u.ReadParams(request);
 
+
+
+            if (_u.parameters.TryGetValue("getCategories", out object? getCategories))
+                return GetCategories(request);
+
             if (_u.parameters.TryGetValue("inviteUser", out object? isInviteUser))
                 return await InviteUser(request);
 
@@ -75,14 +80,6 @@ public class Backend(Environment environment, EmailService emailService)
             if (template != null)
             {
                 var envTemplate = _env.templates[template!.ToString()];
-
-                if (request.Headers.TryGetValue("Authorization", out var AuthToken) && envTemplate.Contains("user_id = :user_id"))
-                {
-                    var handler = new JwtSecurityTokenHandler();
-                    var token = AuthToken.ToString().Substring(7);
-                    var requestJwtToken = handler.ReadJwtToken(token);
-                    _u.parameters["user_id"] = requestJwtToken.Claims.First(claim => claim.Type == "sub").Value;
-                }
 
                 var res = await _u.DB.GetTemplate(envTemplate, _u.parameters, returnInsertedId);
 
@@ -205,30 +202,48 @@ public class Backend(Environment environment, EmailService emailService)
 
             var sendName = name?.ToString() ?? throw new Exception("The name is invalid");
 
-            if (!_u.parameters.TryGetValue("projectId", out object? projectId))
+            if (!_u.parameters.TryGetValue("projectId", out object? id))
                 throw new Exception($"No project id provided");
+
+            var projectId = id?.ToString() ?? throw new Exception("The projectId is invalid");
 
             if (!_u.parameters.TryGetValue("projectName", out object? projectName))
                 throw new Exception($"No project name provided");
 
-            var sqlUser = new Dictionary<string, object?> {
-                    { "sendEmail", sendEmail }
+
+            var sqlUserParams = new Dictionary<string, object?> {
+                    { "sendEmail", sendEmail },
                 };
 
             var dbUser = await _u.DB.ExecuteQuery(
-                "select user_id, id, name from user where email = @sendEmail",
-                sqlUser); // find out if user exists
+                "select user_id, id, name, email from user where email = @sendEmail",
+                sqlUserParams); // find out if user exists
+
+            var dbUserDict = dbUser.FirstOrDefault();
 
             var isSend = false;
             var result = new Dictionary<string, object?>();
 
-            if (dbUser != null && dbUser.Count() > 0) // if exists
+
+            if (dbUserDict != null) // if exists
             {
-                result.Add("dbUser", dbUser);
+                var sqlProjectParams = new Dictionary<string, object?>
+                    {
+                        {"project_id",  projectId},
+                        {"user_id", dbUserDict["id"] }
+                    };
 
-                var dbUserDict = dbUser.FirstOrDefault();
+                var dbProject = await _u.DB.ExecuteQuery(
+                    "select count(1) as count from user_project where project_id = @project_id and user_id = @user_id",
+                    sqlProjectParams); // find out if user is already invited 
+                var project = dbProject.FirstOrDefault();
 
-                string? newName = dbUserDict?["name"] as string;
+                if (project != null && project.Count > 0)
+                    throw new Exception($"The user with email {dbUserDict["email"]} is already exists in the project!");
+                
+
+                string? newName = dbUserDict["name"]?.ToString();
+
                 if (newName != null)
                     sendName = newName;
 
@@ -240,8 +255,6 @@ public class Backend(Environment environment, EmailService emailService)
 
                 var insertUserProject = await _u.DB.ExecuteQuery(
                     "insert user_project (user_id, project_id) values (@user_id, @project_id)", sqlParams);  // add user to the project
-
-                result.Add("insert user project", insertUserProject); // debug
 
                 isSend = await _emailService.SendEmailAsync(
                     sendEmail,

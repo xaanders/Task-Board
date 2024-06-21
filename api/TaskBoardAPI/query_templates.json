@@ -1,5 +1,5 @@
 {
-    "select_project": "SELECT project_id, name as project_name FROM project where status = 1 and user_id = :user_id",
+    "select_project": "SELECT p.project_id, p.name as project_name FROM project p left outer join user_project up on up.project_id = p.project_id left outer join `user` u on u.user_id = up.user_id where p.status = 1 and u.id = :user_id",
     "insert_project": "INSERT project {{insert_params}}",
     "update_project": "UPDATE project {{update_params}}",
 
@@ -23,5 +23,5 @@
     "insert_label": "INSERT label {{insert_params}}",
     "update_label": "UPDATE label {{update_params}}",
 
-    "select_current_user":  "SELECT * from `user` where id = :id and status = 1"
+    "select_current_user": "SELECT id, name, email, is_email_confirmed from `user` where id = :id and status = 1"
 }
