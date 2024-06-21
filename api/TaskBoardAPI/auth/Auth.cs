@@ -82,9 +82,25 @@ public class Auth(IConfiguration configuration, Environment environment)
                 {"status", 1 },
             };
 
-            var res = await _u.DB.ExecuteQuery($"insert `user` (id, name, email, status) values (@id, @name, @email, @status)", upd);
 
+            //check  if user preregistered by invitation
+            var preRegistered = await _u.DB.ExecuteQuery($"select user_id from user where email = @email and is_email_confirmed = 0", upd);
+            var preRegisteredUser = preRegistered.FirstOrDefault();
+
+            if (preRegisteredUser != null && preRegisteredUser.TryGetValue("user_id", out object? userId) && userId != null)
+            {
+                upd.Remove("email");
+                upd.Remove("status");
+                upd.Add("user_id", userId.ToString());
+
+                var res = _u.DB.ExecuteQuery($"UPDATE user set id = @id, name = @name where user_id = @user_id", upd);
+            }
+            else // signup new user
+            {
+                var res = await _u.DB.ExecuteQuery($"insert `user` (id, name, email, status) values (@id, @name, @email, @status)", upd);
+            }
             return Results.Ok(new { Message = "User registered successfully. Please check your email to confirm your account." });
+
         }
         catch (Exception ex)
         {
@@ -251,7 +267,7 @@ public class Auth(IConfiguration configuration, Environment environment)
             var result = await cognitoClient.ConfirmSignUpAsync(confirmRequest);
 
 
-
+                
             var res = await _u.DB.ExecuteQuery("update `user` set is_email_confirmed = 1 where email = @email", new Dictionary<string, object?>
             {
                 {"email", email}
