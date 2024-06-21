@@ -19,8 +19,8 @@ async function fetchCategories(activeBoardId: number | null, accessToken: string
     return;
 
   let res = await apiCall({ method: "GET", accessToken: accessToken, parameters: { apiGate: 'data', board_id: activeBoardId } });
-  if(res && res.length)
-    setCategories(res)
+
+  setCategories(res && res.length ? res : [])
 }
 
 function Board({ activeBoardId, activeBoardName, isProject }: BoardProps) {

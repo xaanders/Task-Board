@@ -1,8 +1,9 @@
 import { toast } from "react-toastify";
 import { IApiCall, IDBCall, IUserLogin, IUserTokenResponse } from "../types/interfaces";
 import { getErrorMessage, settings } from "./helpers";
+import { RequestMethod } from "../types/types";
 export class BoardAPI {
-  async sendRequest({ path, body, method, accessToken, httpOnly }: { path: string, body?: string, method: string, accessToken?: string | null, httpOnly?: boolean }): Promise<any> {
+  async sendRequest({ path, body, method, accessToken, httpOnly }: { path: string, body?: string, method: RequestMethod, accessToken?: string | null, httpOnly?: boolean }): Promise<any> {
 
     const reqObj: IApiCall = {
       body,
@@ -49,15 +50,15 @@ export async function dbApiCall({ method = 'POST', query, accessToken, parameter
 
     const res = await api.sendRequest({ path, body: JSON.stringify(body), accessToken, method })
 
-    if (res.error) {
-      throw new Error(res.error || "Unknown error");
+    if (res.error || res.Error) {
+      throw new Error(res.error || res.Error || "Unknown error");
     }
 
     return res;
 
-  } catch (error) {
+  } catch (error:any) {
     toast(getErrorMessage(error), { type: 'error' });
-    return;
+    return {error: true};
   }
 }
 

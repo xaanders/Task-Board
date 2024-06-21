@@ -1,3 +1,5 @@
+import { RequestMethod } from "./types";
+
 export interface IUser {
   id: string;
   email: string;
@@ -47,7 +49,7 @@ export interface IProject {
   project_name: string;
 }
 export interface IDBCall {
-  method: string;
+  method: RequestMethod;
   query?: string;
   table?: string;
   httpOnly?: boolean;
@@ -57,7 +59,7 @@ export interface IDBCall {
 
 export interface IApiCall {
   headers?: any;
-  method: string;
+  method: RequestMethod;
   body?: string;
   credentials?: RequestCredentials;
 }
