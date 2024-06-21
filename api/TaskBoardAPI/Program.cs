@@ -23,9 +23,14 @@ var environment = new TaskBoardAPI.Environment();
 await environment.ReadTemplates();
 await environment.ReadSettings();
 
-builder.Services.AddTransient(_ => new Backend(environment));
+builder.Services.AddSingleton<EmailService>();
 
-builder.Services.AddTransient(sp => new Auth(sp.GetRequiredService<IConfiguration>(), environment));
+builder.Services.AddTransient(sp => new Backend(environment, sp.GetRequiredService<EmailService>()));
+
+builder.Services.AddTransient(sp => new Auth(
+    sp.GetRequiredService<IConfiguration>(),
+    environment
+));
 
 
 builder.Services.AddCors(options =>
